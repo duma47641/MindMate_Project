@@ -1,0 +1,12 @@
+# 📦 Node.js dependencies
+backend/node_modules/
+backend/.env
+
+# 🧠 Heavy AI Models (100MB ලිමිට් එක පනින නිසා ඉග්නෝර් කරනවා)
+ai_service/saved_model/
+ai_service/__pycache__/
+.pytest_cache/
+
+# 🔒 OS properties
+.DS_Store
+Thumbs.db
