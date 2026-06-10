@@ -10,3 +10,6 @@ ai_service/__pycache__/
 # 🔒 OS properties
 .DS_Store
 Thumbs.db
+
+
+mindmate_frontend/node_modules/
