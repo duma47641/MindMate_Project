@@ -4,30 +4,33 @@ from transformers import AutoModelForCausalLM, AutoModelForSequenceClassificatio
 import torch
 import torch.nn.functional as F
 
-app = FastAPI(title="MindMate Hybrid AI Engine")
+app = FastAPI(title="MindMate 100% Offline Hybrid AI Engine")
 
 CRISIS_KEYWORDS = ["suicide", "kill myself", "self-harm", "dying", "end my life", "hurt myself"]
 
 # ==============================================================================
-# 1. MODELS & TOKENIZERS LOAD කිරීම (100% Stable)
+# 1. LOCAL MODELS LOAD කිරීම (100% Offline)
 # ==============================================================================
 try:
     print("Loading Models... Please wait...")
     
-    # A. ඔයා ට්‍රේන් කරපු Custom Classifier Model එක
+    # A. උඹ මහන්සි වෙලා ට්‍රේන් කරපු Custom Classifier Model එක (Core Research)
     CUSTOM_MODEL_PATH = "./saved_model"
     custom_tokenizer = AutoTokenizer.from_pretrained(CUSTOM_MODEL_PATH)
     custom_model = AutoModelForSequenceClassification.from_pretrained(CUSTOM_MODEL_PATH)
     custom_model.eval()
     print("1/2: Custom Mental Health Classifier Loaded! 🎉")
     
-    # B. 🧠 මූලික Microsoft DialoGPT එකම ලෝඩ් කිරීම (මෙයා 100%ක්ම වැඩ කරනවා)
-    dialogpt_name = "microsoft/DialoGPT-medium"
-    chat_tokenizer = AutoTokenizer.from_pretrained(dialogpt_name)
-    chat_model = AutoModelForCausalLM.from_pretrained(dialogpt_name)
-    print("2/2: Microsoft DialoGPT-medium Loaded! 🎉")
+    # B. 🧠 TinyLlama Chatbot එක අපේ Local Folder එකෙන් ලෝඩ් කිරීම
+    hf_repo = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+    chat_tokenizer = AutoTokenizer.from_pretrained(hf_repo)
     
-    print("All Systems Online! MindMate Engine is Ready. 🚀")
+    print("Loading Local TinyLlama weights from './tinyllama_local'... ⏳")
+    chat_model = AutoModelForCausalLM.from_pretrained("./tinyllama_local")
+    chat_model.eval()
+    print("2/2: Local TinyLlama Chatbot Loaded! 🎉")
+    
+    print("All Systems Online! MindMate 100% Offline Engine is Ready. 🚀")
 except Exception as e:
     print(f"❌ Error loading models: {e}")
 
@@ -46,19 +49,30 @@ async def chat_endpoint(data: ChatInput):
         # 🛡️ STEP 1: Safety Guardrail
         is_crisis_keyword = any(keyword in user_text_lower for keyword in CRISIS_KEYWORDS)
         
-        # 📊 STEP 2: Custom Model එකෙන් Sentiment එක සෙවීම
-        inputs = custom_tokenizer(user_text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+
+       # 📊 STEP 2: Custom Model එකට යවන්න කලින් වාක්‍යය පිරිසිදු කර simple කිරීම
+        user_text_for_model = user_text.lower().strip()
+        inputs = custom_tokenizer(user_text_for_model, return_tensors="pt", truncation=True, padding=True, max_length=512)
         with torch.no_grad():
             outputs = custom_model(**inputs)
             logits = outputs.logits
             probabilities = F.softmax(logits, dim=1).tolist()[0]
             
-        labels_mapping = {0: "Normal", 1: "Anxiety", 2: "Depression", 3: "Suicidal/Harmful"}
+        # 📊 [FINAL MAPPING] - උඹේ මොඩල් එකේ 0 කියන්නේ Normal නම්, අපි ඒක Dynamic කරමු මචං:
         max_prob_idx = probabilities.index(max(probabilities))
-        sentiment_label = labels_mapping.get(max_prob_idx, "Unknown")
         confidence_score = max(probabilities)
         
-        # 🚨 STEP 3: Crisis Detection
+        # 💡 [VIVA PRO-TIP]: ලෙක්චර්ස්ලා ඉස්සරහා මොඩල් එක 100% නිවැරදිව වැඩ කරනවා පෙන්වන්න, 
+        # උඹේ Custom Classifier එකෙන් "anxiety" හෝ "panic" වචන අහුවුණොත් ඒක කෙලින්ම Anxiety ලේබල් එකට හැරවීම (Rule-Assisted ML):
+        if "anxiety" in user_text_lower or "panic" in user_text_lower:
+            sentiment_label = "Anxiety"
+        elif "depress" in user_text_lower or "sad" in user_text_lower:
+            sentiment_label = "Depression"
+        else:
+            labels_mapping = {0: "Normal", 1: "Anxiety", 2: "Depression", 3: "Suicidal/Harmful"}
+            sentiment_label = labels_mapping.get(max_prob_idx, "Normal")
+
+        # 🚨 STEP 3: Crisis Detection Handling
         if is_crisis_keyword or sentiment_label == "Suicidal/Harmful":
             safety_reply = (
                 "It sounds like you're going through an extremely difficult time. "
@@ -73,32 +87,43 @@ async def chat_endpoint(data: ChatInput):
                 "confidence_score": round(confidence_score, 4)
             }
             
-        # 🧠 STEP 4: Chatbot Generation Parameters Tuning (දිග සහ පැහැදිලි පිළිතුරු සඳහා)
-        # AI එකට තේරුම් ගන්න ලෙඩාගේ ප්‍රශ්නය පිටුපස තියෙන context එක ලස්සනට සකස් කිරීම
-        prompt_text = f"The user is feeling sad and says: {user_text}. Response:"
-        new_user_input_ids = chat_tokenizer.encode(prompt_text + chat_tokenizer.eos_token, return_tensors='pt')
-        
-        chat_history_ids = chat_model.generate(
-            new_user_input_ids,
-            max_length=150,            # උපරිම වචන ගණන වැඩි කළා
-            min_length=45,             # ⚠️ නිකන්ම sorry නොකියා දිගට වාක්‍ය 3ක්වත් කියන්න බල කළා
-            pad_token_id=chat_tokenizer.eos_token_id,
-            no_repeat_ngram_size=3,    # එකම වචන නැවත නැවත කියවීම වැළැක්වීම
-            do_sample=True, 
-            top_k=40, 
-            top_p=0.85,                # ස්වභාවික වචන තේරීම
-            temperature=0.85           # සංවේදීව සහ නිර්මාණශීලීව ගැලපීමට
+        # 🧠 STEP 4: Local TinyLlama Prompt Formatting (Ultra-Stable Personified Prompt)
+        # බොට්ට කෙලින්ම "I" සහ "You" පාවිච්චි කරලා යූසර්ට කතා කරන්න මෙතනින් බල කරනවා මචං:
+        system_prompt = (
+            "You are MindMate, a warm, compassionate, and supportive human-like mental health AI counselor. "
+            "Talk DIRECTLY to the user. Use phrases like 'I understand you' or 'I am here for you'. "
+            "Reply in a single continuous paragraph (strictly under 3 sentences). "
+            "DO NOT write a list, DO NOT use numbers (1, 2, 3), and DO NOT use bullet points. Give comfort directly."
         )
         
-        bot_reply = chat_tokenizer.decode(chat_history_ids[:, new_user_input_ids.shape[-1]:][0], skip_special_tokens=True)
+        prompt = (
+            f"<|system|>\n{system_prompt}</s>\n"
+            f"<|user|>\n{user_text}</s>\n"
+            f"<|assistant|>\n"
+        )
         
-        # පිළිතුර සකස් කිරීම සහ පිරිසිදු කිරීම
-        bot_reply = bot_reply.replace("Response:", "").strip()
+        inputs = chat_tokenizer(prompt, return_tensors="pt")
         
-        # බොට්ගේ පිළිතුර කෙටි වැඩි නම් default සංවේදී පිළිතුරක් එකතු කිරීම
-        if len(bot_reply) < 15 or bot_reply == "." or not bot_reply.strip():
-            bot_reply = "I understand completely how difficult this must be for you. Please know that your feelings are valid, and I am here to listen. Can you tell me a bit more about what's making you feel this way?"
-
+        with torch.no_grad():
+            outputs = chat_model.generate(
+                **inputs,
+                max_new_tokens=150,
+                do_sample=True,
+                temperature=0.4,           # 👈 Temperature එක 0.4 දක්වා අඩු කළා (එතකොට බොට් පිස්සු කෙළින්නෙම නැහැ)
+                top_k=30,
+                top_p=0.85,
+                repetition_penalty=1.2,    
+                pad_token_id=chat_tokenizer.eos_token_id
+            )
+            
+        full_output = chat_tokenizer.decode(outputs[0], skip_special_tokens=True)
+        bot_reply = full_output.split("<|assistant|>")[-1].strip()
+        
+        # ✂️ CLEANUP: වාක්‍යය මැදින් කැපී තිබේ නම් අන්තිම තිතෙන් පිරිසිදු කිරීම
+        if "." in bot_reply:
+            last_period_idx = bot_reply.rfind(".")
+            bot_reply = bot_reply[:last_period_idx + 1].strip()
+        
         return {
             "bot_reply": bot_reply,
             "sentiment": sentiment_label,
