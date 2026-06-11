@@ -13,7 +13,7 @@ const UserSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-// 🔒 modern Mongoose වල next() නැතුව කෙලින්ම async/await වලින් පමණක් ලියන ක්‍රමය:
+// 🔒 Password Hashing Logic
 UserSchema.pre('save', async function () {
     if (!this.isModified('password')) return;
 
