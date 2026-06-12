@@ -3,15 +3,21 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Chat from './pages/Chat';
-// 1. උඩින්ම පේජ් එක Import කරගන්න මචං:
 import AdminDashboard from './pages/AdminDashboard';
+import DoctorDashboard from './pages/DoctorDashboard';
+// ⚠️ උඹ ළඟ දැනට StaffDashboard පේජ් එකක් නැත්නම්, දැනට මේක AdminDashboard එකට හරි වෙන එකකට හරි ලින්ක් කරලා තියන්න මචං ක්‍රෑෂ් නොවී ඉන්න.
+// ඊළඟ පියවරේදී අපි StaffDashboard එක හදමු!
+import StaffDashboard from './pages/StaffDashboard'; // 👈 🟢 [Fix]: නිවැරදි අලුත් පේජ් එක ලින්ක් කළා මචං!
 
 document.title = "MindMate | AI Mental Health Support";
 
 function App() {
-  // 🔐 යූසර් ලොග් වෙලාද නැද්ද කියලා බැලීමට (Protected Route Logic)
   const isAuthenticated = () => {
     return localStorage.getItem('token') !== null;
+  };
+
+  const getUserRole = () => {
+    return localStorage.getItem('role'); 
   };
 
   return (
@@ -21,20 +27,32 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* 🧠 Core Chat Route - ලොග් වෙලා නැත්නම් ඔටෝම ලොගින් පේජ් එකට හරවා යවයි */}
+        {/* 🧠 Patient Route */}
         <Route 
           path="/chat" 
           element={isAuthenticated() ? <Chat /> : <Navigate to="/login" />} 
         />
 
-        {/* 🔀 Default Route - ඇප් එකට ආපු ගමන් කෙලින්ම ලොගින් පේජ් එකට යැවීම */}
+        {/* 👑 Admin Route */}
+        <Route 
+          path="/admin-dashboard" 
+          element={isAuthenticated() && getUserRole() === 'Admin' ? <AdminDashboard /> : <Navigate to="/login" />} 
+        />
+
+        {/* 👨‍⚕️ Doctor Route */}
+        <Route 
+          path="/doctor-dashboard" 
+          element={isAuthenticated() && getUserRole() === 'Doctor' ? <DoctorDashboard /> : <Navigate to="/login" />} 
+        />
+
+        {/* 💼 Staff Route - 🟢 ලොග් වෙලා + 'Staff' වෙන්නම ඕනේ මචං! */}
+        <Route 
+          path="/staff-dashboard" 
+          element={isAuthenticated() && getUserRole() === 'Staff' ? <StaffDashboard /> : <Navigate to="/login" />} 
+        />
+
+        {/* 🔀 Default Route */}
         <Route path="*" element={<Navigate to="/login" />} />
-
-          <Route 
-            path="/admin-dashboard" 
-            element={isAuthenticated() && localStorage.getItem('role') === 'Admin' ? <AdminDashboard /> : <Navigate to="/login" />} />
-
-
       </Routes>
     </Router>
   );

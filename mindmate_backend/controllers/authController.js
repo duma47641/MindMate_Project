@@ -3,11 +3,23 @@ import DoctorProfile from '../models/DoctorProfile.js';
 import StaffProfile from '../models/StaffProfile.js';
 import jwt from 'jsonwebtoken';
 
-const generateToken = (id, role) => {
-    return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '30d' });
+// 🟢 [The Ultimate Token Generator Fix]: ටෝකන් එක ජෙනරේට් කරන කොටසටම මුළු යූසර් ඔබ්ජෙක්ට් එකම පැක් කළා මචං!
+const generateToken = (user) => {
+    return jwt.sign(
+        { 
+            id: user._id, 
+            name: user.name || user.username || user.fullName, // 💡 නම මොන කී එකෙන් තිබ්බත් dynamic අල්ලනවා බං
+            email: user.email,
+            role: user.role 
+        }, 
+        process.env.JWT_SECRET, 
+        { expiresIn: '30d' }
+    );
 };
 
-// 🚀 REGISTRATION CONTROLLER (Handles Patient, Doctor, and Staff)
+// =========================================================================
+// 🚀 1. REGISTRATION CONTROLLER (Handles Patient, Doctor, and Staff)
+// =========================================================================
 export const registerUser = async (req, res) => {
     const { name, email, password, role, phone, specialization, fee, bio, slots, address } = req.body;
     
@@ -37,12 +49,15 @@ export const registerUser = async (req, res) => {
             });
         }
 
+        // 💡 [The Token Fix Applied]: රෙජිස්ටර් වෙන වෙලාවෙත් ටෝකන් එක සුපිරියටම පැක් වෙලා යනවා බං
+        const token = generateToken(user);
+
         return res.status(201).json({
             _id: user._id,
             name: user.name,
             email: user.email,
             role: user.role,
-            token: generateToken(user._id, user.role),
+            token: token, // 👈 පර්ෆෙක්ට් පැකේජ් එක
             message: `${user.role} registered successfully! 🎉`
         });
 
@@ -51,7 +66,9 @@ export const registerUser = async (req, res) => {
     }
 };
 
-// 🔐 UNIVERSAL LOGIN CONTROLLER
+// =========================================================================
+// 🔐 2. UNIVERSAL LOGIN CONTROLLER
+// =========================================================================
 export const loginUser = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -64,12 +81,15 @@ export const loginUser = async (req, res) => {
                 : user.password === password;
 
             if (isMatch) {
-                return res.json({
+                // 💡 [The Token Fix Applied]: ලොගින් වෙන වෙලාවේ අලුත්ම පැක් වෙච්ච සුපිරි ටෝකන් එක හැදෙනවා
+                const token = generateToken(user);
+
+                return res.status(200).json({
                     _id: user._id,
                     name: user.name,
                     email: user.email,
                     role: user.role,
-                    token: generateToken(user._id, user.role)
+                    token: token // 👈 මේ ටෝකන් එක දැන් ෆ්‍රන්ට්එන්ඩ් එකට සටස් ගාලා ඩේටා ටික දෙනවා මචං
                 });
             }
         }

@@ -1,0 +1,17 @@
+import express from 'express';
+import { bookAppointment, getMyAppointments, updateAppointmentStatus, processAppointmentPayment, getPatientAnalyticsForDoctor } from '../controllers/appointmentController.js';
+import { protect } from '../middleware/authMiddleware.js';
+
+const router = express.Router();
+
+router.post('/', protect, bookAppointment);
+router.get('/my', protect, getMyAppointments);
+router.get('/analytics/:patientId', protect, getPatientAnalyticsForDoctor);
+
+// 🟢 දොස්තර Approve කරන පාර: PUT /api/appointments/:id/status
+router.put('/:id/status', protect, updateAppointmentStatus);
+
+// 🟢 පේෂන්ට් සල්ලි ගෙවන පාර: PUT /api/appointments/:id/pay
+router.put('/:id/pay', protect, processAppointmentPayment);
+
+export default router;

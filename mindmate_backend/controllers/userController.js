@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import DoctorProfile from '../models/DoctorProfile.js';
 import StaffProfile from '../models/StaffProfile.js';
+import bcrypt from 'bcryptjs'; // පාස්වර්ඩ් එක encrypt කරන්න
 
 // 🩺 1. සියලුම දොස්තරලා සහ ස්ටාෆ් මෙම්බර්ස්ලාගේ විස්තර ප්‍රොෆයිල් එකත් එක්කම එකතු කර ගැනීම (Fetch All)
 export const getAllPractitioners = async (req, res) => {
@@ -109,5 +110,62 @@ export const updateUser = async (req, res) => {
         return res.status(200).json({ message: `${user.role} updated successfully! 🎉` });
     } catch (error) {
         return res.status(500).json({ message: "Update Error: " + error.message });
+    }
+};
+
+
+
+        // 🩺 4. Patient වෙනුවෙන් සියලුම දොස්තරලාගේ විස්තර ප්‍රොෆයිල් එකත් එක්කම එකතු කර ගැනීම (Get Only Doctors)
+export const getAvailableDoctors = async (req, res) => {
+    try {
+        // ඩේටාබේස් එකෙන් role එක 'Doctor' විතරක් තියෙන අයව හොයනවා (Email, Password වගේ රහස්‍ය දේවල් අයින් කරලා)
+        const doctors = await User.find({ role: 'Doctor' }).select('-password');
+
+        // හැම දොස්තර කෙනෙකුගේම Profile විස්තර (Specialization, Fee, Slots) ටික එකතු කරනවා
+        const doctorProfiles = await Promise.all(doctors.map(async (doc) => {
+            const docData = doc.toObject();
+            const profile = await DoctorProfile.findOne({ userId: doc._id });
+            
+            return {
+                ...docData,
+                ...profile?.toObject() // ප්‍රොෆයිල් එකේ විස්තර ටික මෙතනට එකතු කළා මචං
+            };
+        }));
+
+        return res.status(200).json(doctorProfiles);
+    } catch (error) {
+        return res.status(500).json({ message: "Error fetching doctors: " + error.message });
+    }
+};
+
+
+
+            // 🔒 5. දොස්තරට තමන්ගේ පාස්වර්ඩ් එක වෙනස් කරගැනීමේ ලෝජික් එක
+export const updateDoctorPassword = async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const doctorId = req.user.id; // ලොග් වෙලා ඉන්න එකාගේ ID එක
+
+    try {
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: "Both current and new passwords are required!" });
+        }
+
+        const user = await User.findById(doctorId);
+        if (!user) return res.status(404).json({ message: "User not found!" });
+
+        // 1. පරණ පාස්වර්ඩ් එක හරිද කියලා ඩේටාබේස් එකත් එක්ක මැච් කරනවා
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Current password is incorrect! ❌" });
+        }
+
+        // 2. අලුත් පාස්වර්ඩ් එක සේෆ්ටි විදිහට Hash කරනවා
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        
+        await user.save();
+        return res.status(200).json({ message: "Password updated successfully! 🔒🎉" });
+    } catch (error) {
+        return res.status(500).json({ message: "Server Error: " + error.message });
     }
 };

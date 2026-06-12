@@ -6,7 +6,6 @@ const Login = () => {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-        // 🟢 යූසර් ආයෙමත් කොටුවක් ඇතුළේ ටයිප් කරන්න පටන් ගත්ත ගමන් රතු පාට පරණ Error එක ඔටෝම මැකී යයි!
         if (error) setError('');
     };
 
@@ -15,7 +14,6 @@ const Login = () => {
         setError('');
 
         try {
-            // 💡 බැක්එන්ඩ් එකේ Login API එකට කෝල් කිරීම
             const response = await fetch('http://localhost:5000/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -24,18 +22,18 @@ const Login = () => {
             const data = await response.json();
 
             if (response.ok) {
-                // 🔐 Token එක සහ Role එක බ්‍රවුසර් එකේ සේဝ် කරගැනීම
+                // 🟢 [Smart Storage Update]: Token, Role සහ Username ඔක්කොම ලස්සනට සේව් වෙනවා මචං
                 localStorage.setItem('token', data.token);
-                localStorage.setItem('role', data.role);
-                localStorage.setItem('username', data.name); // 👈 බැක්එන්ඩ් එකෙන් එන නම (data.name) මෙතනට ලින්ක් කළා මචං
+                localStorage.setItem('role', data.role); // 👈 App.jsx එකේ Security Guards වලට මේක අනිවාර්යයි!
+                localStorage.setItem('username', data.name); 
 
-                // 🔀 Role එක අනුව අදාළ පේජ් එකට රීඩිරෙක්ට් කිරීම
+                // 🔀 [Smart Redirector Workflow]: Staff කෑල්ලත් එක්කම Role-Based Routing සෙට් කළා බෝක්කා!
                 if (data.role === 'Admin') {
                     window.location.href = '/admin-dashboard';
                 } else if (data.role === 'Doctor') {
                     window.location.href = '/doctor-dashboard';
                 } else if (data.role === 'Staff') {
-                    window.location.href = '/staff-dashboard';
+                    window.location.href = '/staff-dashboard'; // 👈 Staff එකා කෙලින්ම තමන්ගේ Dashboard එකට!
                 } else {
                     window.location.href = '/chat'; // Patient නම් කෙලින්ම AI චැට් එකට
                 }
@@ -82,7 +80,6 @@ const Login = () => {
                         />
                     </div>
 
-                    {/* ❌ Error එකක් තිබ්බොත් විතරක් රතු පාටින් පේන කොටස */}
                     {error && <div className="text-red-400 text-sm bg-red-500/10 p-3 rounded-lg border border-red-500/20">{error}</div>}
 
                     <button

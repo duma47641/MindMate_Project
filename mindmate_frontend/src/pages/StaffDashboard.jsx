@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-function AdminDashboard() {
+function StaffDashboard() {
   const [activeMenu, setActiveMenu] = useState('ledger'); // 'ledger' හෝ 'settings'
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // 🚪 Logout Confirmation Modal State එක මෙතන තියෙනවා මචං
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  
-  // Admin Identity Info State
-  const [adminInfo, setAdminInfo] = useState({ name: 'Loading...', email: '' });
+  // Staff Identity Info State
+  const [staffInfo, setStaffInfo] = useState({ name: 'Loading...', email: '' });
 
   // Password Update States
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
@@ -36,16 +33,16 @@ function AdminDashboard() {
   useEffect(() => {
     if (!TOKEN) { window.location.href = '/login'; return; }
 
-    // 🕵️‍♂️ Token එක ඇතුළෙන් ලොග් වී ඉන්න ඇඩ්මින්ගේ නම සහ ඊමේල් එක ඩිකෝඩ් කරලා ගැනීම
+    // 🕵️‍♂️ Token එක ඇතුළෙන් ලොග් වී ඉන්න ස්ටාෆ් මෙම්බර්ගේ නම සහ ඊමේල් එක ඩිකෝඩ් කරලා ගැනීම
     try {
       const base64Url = TOKEN.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const payload = JSON.parse(window.atob(base64));
       
       const core = payload.user || payload;
-      setAdminInfo({
-        name: core.name || 'MindMate Admin',
-        email: core.email || 'admin@mindmate.com'
+      setStaffInfo({
+        name: core.name || 'MindMate Staff',
+        email: core.email || 'staff@mindmate.com'
       });
     } catch (error) {
       console.error("Token decode error:", error.message);
@@ -60,9 +57,9 @@ function AdminDashboard() {
     }
   }, [activeMenu]);
 
-  // 👨‍⚕️ Admin එකට ඕන නම් ඇපොයින්ට්මන්ට් එකක් Approve/Cancel කරන්න පුළුවන් ලෝජික් එක
+  // 👨‍⚕️ Staff එකට ඕන නම් ඇපොයින්ට්මන්ට් එකක් Approve/Cancel කරන්න පුළුවන් ලෝජික් එක
   const handleStatusOverride = async (appId, nextStatus) => {
-    if (!window.confirm(`Admin Override: Are you sure you want to ${nextStatus} this appointment?`)) return;
+    if (!window.confirm(`Staff Override: Are you sure you want to ${nextStatus} this appointment?`)) return;
     try {
       const config = { headers: { Authorization: `Bearer ${TOKEN}` } };
       await axios.put(`http://localhost:5000/api/appointments/${appId}/status`, { status: nextStatus }, config);
@@ -73,14 +70,14 @@ function AdminDashboard() {
     }
   };
 
-  // 🔒 ඇඩ්මින්ගේ පාස්වර්ඩ් එක වෙනස් කිරීමේ Submission එක
+  // 🔒 ස්ටාෆ්ගේ පාස්වර්ඩ් එක වෙනස් කිරීමේ Submission එක
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     setPassLoading(true);
     try {
       const config = { headers: { Authorization: `Bearer ${TOKEN}` } };
       await axios.put('http://localhost:5000/api/users/update-password', passwordForm, config);
-      alert("🔒 Admin Master Account Password Updated Successfully! 🎉");
+      alert("🔒 Staff Account Password Updated Successfully! 🎉");
       setPasswordForm({ currentPassword: '', newPassword: '' });
     } catch (error) {
       alert(error.response?.data?.message || "Password Update Failed");
@@ -96,10 +93,10 @@ function AdminDashboard() {
       <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl h-full flex-shrink-0">
         <div>
           <div className="p-6 border-b border-slate-800 bg-slate-900/50 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center font-bold text-slate-950 text-sm shadow-lg">🛡️</div>
+            <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center font-bold text-slate-950 text-sm shadow-lg">💼</div>
             <div>
-              <h2 className="text-sm font-bold tracking-wide text-teal-400">MindMate Admin</h2>
-              <p className="text-[10px] text-slate-400">Root Operations</p>
+              <h2 className="text-sm font-bold tracking-wide text-teal-400">MindMate Staff</h2>
+              <p className="text-[10px] text-slate-400">Desk Operations</p>
             </div>
           </div>
           <nav className="p-4 space-y-2">
@@ -107,10 +104,10 @@ function AdminDashboard() {
               onClick={() => setActiveMenu('ledger')} 
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'ledger' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}
             >
-              📋 Master App Log
+              📋 Overall App Log
             </button>
             
-            {/* ⚙️ ඇඩ්මින් වෙනුවෙන් අලුතින්ම එකතු කරපු Settings Tab එක මචං */}
+            {/* ⚙️ ස්ටාෆ් වෙනුවෙන් අලුතින්ම එකතු කරපු Settings Tab එක මචං */}
             <button 
               onClick={() => setActiveMenu('settings')} 
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'settings' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}
@@ -120,23 +117,22 @@ function AdminDashboard() {
           </nav>
         </div>
 
-        {/* 🟢 [Smart Admin Badge]: ලොග් වෙලා ඉන්න ඇඩ්මින්ගේ නම, ඊමේල් එක සහ Logout එක */}
+        {/* 🟢 [Smart Staff Badge]: ලොග් වෙලා ඉන්න ස්ටාෆ් මෙම්බර්ගේ නම, ඊමේල් එක සහ Logout එක */}
         <div className="p-4 border-t border-slate-800 bg-slate-950/20 space-y-3">
           <div className="flex items-center gap-3 px-2 py-1">
             <div className="w-9 h-9 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-sm font-bold text-teal-400">
-              {adminInfo.name.charAt(0).toUpperCase()}
+              {staffInfo.name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-slate-200 truncate">{adminInfo.name}</p>
-              <p className="text-[10px] text-slate-500 truncate">{adminInfo.email}</p>
+              <p className="text-xs font-bold text-slate-200 truncate">{staffInfo.name}</p>
+              <p className="text-[10px] text-slate-500 truncate">{staffInfo.email}</p>
             </div>
           </div>
-          {/* 🟢 පැරණි කෝඩ් එක වෙනස් කරලා සෘජුවම Modal එක ට්‍රිගර් වෙන විදිහට සෙට් කළා බං */}
           <button 
-            onClick={() => setShowLogoutModal(true)} 
+            onClick={() => { localStorage.clear(); window.location.href = '/login'; }} 
             className="w-full py-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-white font-bold rounded-xl text-[11px] transition-all"
           >
-            Logout Master
+            Logout Session
           </button>
         </div>
       </aside>
@@ -145,7 +141,7 @@ function AdminDashboard() {
       <div className="flex-1 flex flex-col h-full bg-slate-950 min-w-0">
         <header className="flex items-center justify-between px-6 py-4 bg-slate-900/80 border-b border-slate-800 backdrop-blur-md">
           <h1 className="text-lg font-bold tracking-wide text-teal-400">
-            {activeMenu === 'ledger' ? 'Global Appointment Ledger (Master View)' : 'Security Settings'}
+            {activeMenu === 'ledger' ? 'Global Appointment Ledger' : 'Security Settings'}
           </h1>
         </header>
 
@@ -207,7 +203,7 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* 2. ⚙️ ADMIN PASSWORD ACCOUNT SETTINGS TAB */}
+        {/* 2. ⚙️ STAFF PASSWORD ACCOUNT SETTINGS TAB */}
         {activeMenu === 'settings' && (
           <div className="flex-1 overflow-y-auto p-8 flex items-center justify-center">
             <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-6 animate-fadeIn">
@@ -250,50 +246,8 @@ function AdminDashboard() {
         )}
       </div>
 
-      {/* ==================== 📊 PREMIUM LOGOUT CONFIRMATION POPUP ==================== */}
-      {/* 🟢 ඔන්න ඇඩ්මින්ගේ එකටත් Safe-Logout Popup එක කෝඩ් එකේ යටින්ම ලස්සනට ඇමිණුවා මචං! */}
-      {showLogoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md transition-all animate-fadeIn">
-          <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl p-6 space-y-6 border border-rose-500/10">
-            
-            {/* Icon & Message */}
-            <div className="text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-400 text-xl shadow-lg shadow-rose-500/5 animate-pulse">
-                🚪
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-bold text-slate-200">Confirm Logout</h3>
-                <p className="text-xs text-slate-400">Are you sure you want to end your active session on MindMate?</p>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <button 
-                type="button" 
-                onClick={() => setShowLogoutModal(false)} 
-                className="w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                type="button" 
-                onClick={() => {
-                  localStorage.clear();
-                  window.location.href = '/login';
-                }} 
-                className="w-1/2 py-2.5 bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold rounded-xl text-xs shadow-lg shadow-rose-500/10 transition-all"
-              >
-                Logout Account
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
 
-export default AdminDashboard;
+export default StaffDashboard;

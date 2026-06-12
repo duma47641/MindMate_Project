@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js'; 
 import chatRoutes from './routes/chatRoutes.js';
 import userRoutes from './routes/userRoutes.js'; // 👈 අපේ අලුත් userRoutes එක Import කළා මචං!
-
+import appointmentRoutes from './routes/appointmentRoutes.js'; // 👈 1. උඩින් Import කරන්න
 dotenv.config();
 const app = express();
 
@@ -17,7 +17,7 @@ app.use(cors());
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/users', userRoutes); // 👈 මෙතනට /api/users කියලා අලුත් පාර සෙට් කළා!
-
+app.use('/api/appointments', appointmentRoutes); // 👈 2. රවුට්ස් ලිස්ට් එක යටට දාන්න
 app.get('/', (req, res) => res.send('MindMate Backend API Running...'));
 
 // MongoDB Local Connection
