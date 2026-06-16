@@ -99,3 +99,38 @@ export const loginUser = async (req, res) => {
         return res.status(500).json({ message: "Login Error: " + error.message });
     }
 };
+
+
+        // 🔄 UNIVERSAL ACCOUNTS UPDATE CONTROLLER (For Admin/Users)
+export const updateUserProfile = async (req, res) => {
+    const { name, email, phone, role, specialization, fee, address } = req.body;
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: 'User profile not found' });
+
+        // 1. ප්‍රධාන User මොඩල් එකේ දත්ත අප්ඩේට් කිරීම
+        user.name = name || user.name;
+        user.email = email || user.email;
+        if (role) user.role = role;
+        await user.save();
+
+        // 2. Role එක අනුව අදාළ Profile කලෙක්ෂන් එකේ දත්ත අප්ඩේට් කිරීම
+        if (user.role === 'Doctor') {
+            await DoctorProfile.findOneAndUpdate(
+                { userId: user._id },
+                { phone, specialization, fee: Number(fee) || 0 },
+                { upsert: true }
+            );
+        } else if (user.role === 'Staff') {
+            await StaffProfile.findOneAndUpdate(
+                { userId: user._id },
+                { phone, address },
+                { upsert: true }
+            );
+        }
+
+        return res.status(200).json({ message: `${user.role} account updated successfully! 🎉` });
+    } catch (error) {
+        return res.status(500).json({ message: "Update Error: " + error.message });
+    }
+};

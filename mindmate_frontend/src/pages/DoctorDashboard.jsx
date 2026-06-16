@@ -8,7 +8,7 @@ function DoctorDashboard() {
   const [loading, setLoading] = useState(true);
   const [docInfo, setDocInfo] = useState({ name: 'Loading...', email: '' });
   
-  // 🚪 Logout Confirmation Modal State එක මෙතන තියෙනවා මචං
+  // 🚪 Logout Confirmation Modal State
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Chart Modal States
@@ -113,6 +113,18 @@ function DoctorDashboard() {
     }
   };
 
+  // 🟢 [Stats Calculation Logic]: සජීවීව ගණන් හිලව් හදාගන්නා සුපිරි ලෝජික් එක මචං
+  const pendingCount = appointments.filter(app => app.status === 'Pending').length;
+  const approvedCount = appointments.filter(app => app.status === 'Approved' || app.status === 'Paid').length;
+  
+  // මුළු ආදායම (Approved හෝ Paid ඒවායින් විතරක් එකතුව හදයි)
+  const totalIncome = appointments
+    .filter(app => app.status === 'Approved' || app.status === 'Paid')
+    .reduce((sum, app) => {
+      const fee = parseFloat(app.doctorDetails?.fee || app.fee || 2500);
+      return sum + fee;
+    }, 0);
+
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100 font-sans overflow-hidden">
       
@@ -154,7 +166,6 @@ function DoctorDashboard() {
               <p className="text-[10px] text-slate-500 truncate">{docInfo.email}</p>
             </div>
           </div>
-          {/* 🟢 පැරණි කෝඩ් එක වෙනස් කරලා සෘජුවම Modal එක ට්‍රිගර් වෙන විදිහට සෙට් කළා බං */}
           <button 
             onClick={() => setShowLogoutModal(true)} 
             className="w-full py-2 bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-white font-bold rounded-xl text-[11px] transition-all"
@@ -172,10 +183,48 @@ function DoctorDashboard() {
           </h1>
         </header>
 
-        {/* 1. 📋 APPOINTMENTS LIST VIEW (RE-ACTIVATED AND FIXED!) */}
+        {/* 1. 📋 APPOINTMENTS LIST VIEW */}
         {activeMenu === 'appointments' && (
           <div className="flex-1 overflow-y-auto p-8">
             <div className="max-w-4xl mx-auto space-y-4">
+              
+              {/* 🟢 [UI Fix]: උඹ ඉල්ලපු ලස්සන Stats Cards 3 මෙන්න මෙතන තියෙනවා බෝක්කා */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                
+                {/* Pending Card */}
+                <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-lg">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pending Sessions</p>
+                    <h3 className="text-2xl font-black text-amber-400 mt-1">{pendingCount}</h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Awaiting approval</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-md">⏳</div>
+                </div>
+
+                {/* Approved Card */}
+                <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-lg">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Approved Sessions</p>
+                    <h3 className="text-2xl font-black text-teal-400 mt-1">{approvedCount}</h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Active patients</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-md">✅</div>
+                </div>
+
+                {/* Total Income Card */}
+                <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-lg border-emerald-500/10">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Earnings</p>
+                    <h3 className="text-2xl font-black text-emerald-400 mt-1">
+                      LKR {totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Cleared sessions</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-md">💵</div>
+                </div>
+
+              </div>
+
               <h2 className="text-sm font-bold text-slate-300 mb-4 font-semibold">Active Consultation Intake</h2>
               
               {loading ? (
@@ -310,7 +359,6 @@ function DoctorDashboard() {
       )}
 
       {/* ==================== 🚪 PREMIUM LOGOUT CONFIRMATION POPUP ==================== */}
-      {/* 🟢 ඔන්න දොස්තරගේ එකටත් Safe-Logout Popup එක කෝඩ් එකේ යටින්ම ලස්සනට ඇමිණුවා බං! */}
       {showLogoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md transition-all animate-fadeIn">
           <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl p-6 space-y-6 border border-rose-500/10">
