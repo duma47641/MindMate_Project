@@ -2,11 +2,13 @@ import Appointment from '../models/Appointment.js';
 import User from '../models/User.js';
 import DoctorProfile from '../models/DoctorProfile.js';
 import ChatHistory from '../models/Chat.js'; // 🔗 චැට් හිස්ට්‍රි මොඩල් එක ලස්සනට ලින්ක් කළා මචං
+// 🟢 [Import for Method 01]: controllers ෆෝල්ඩර් එකෙන් එළියට ඇවිත් utils එකට යන්න ඕන නිසා ../ වදින්නේ බං
+import { sendAppointmentEmail } from '../utils/emailHelper.js';
 
 // =========================================================================
 // 📅 1. අලුතින් Appointment එකක් බුක් කිරීම (Create Appointment)
 // =========================================================================
-        // 📅 1. අලුතින් Appointment එකක් බුක් කිරීම (Create Appointment) - [The Absolute Safe Fix]
+// 📅 1. අලුතින් Appointment එකක් බුක් කිරීම (Create Appointment) - [The Absolute Safe Fix]
 export const bookAppointment = async (req, res) => {
     // 💡 ෆ්‍රන්ට්එන්ඩ් එකෙන් එවන patientId එක කෙලින්ම ගන්නවා මචං පටලැවිල්ල නැති වෙන්න
     const { doctorId, date, timeSlot, patientId } = req.body;
@@ -58,7 +60,7 @@ export const bookAppointment = async (req, res) => {
 
 // =========================================================================
 // 📜 2. ලොග් වී ඉන්න පුද්ගලයාට අදාළ ඇපොයින්ට්මන්ට්ස් ලිස්ට් එක ගැනීම (Get My Appointments)
-        // 📜 2. ලොග් වී ඉන්න පුද්ගලයාට අදාළ ඇපොයින්ට්මන්ට්ස් ලිස්ට් එක ගැනීම (Get My Appointments)
+// =========================================================================
 export const getMyAppointments = async (req, res) => {
     const userId = req.user.id;
     const role = req.user.role;
@@ -152,23 +154,50 @@ export const getMyAppointments = async (req, res) => {
 };
 
 // =========================================================================
-// 🔄 3. Doctor විසින් Appointment එක Approve හෝ Cancel කිරීම
+// 🔄 3. Doctor විසින් Appointment එක Approve හෝ Cancel කිරීම (Nodemailer Embedded! 📧)
 // =========================================================================
 export const updateAppointmentStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
     try {
-        const appointment = await Appointment.findById(id);
+        // 🟢 ඊමේල් එක යවන්න කලින් patientId සහ doctorId විස්තර ටික අපිට Populate කරගන්න වෙනවා මචං
+        const appointment = await Appointment.findById(id)
+            .populate('patientId', 'name username email')
+            .populate('doctorId', 'name email');
+
         if (!appointment) return res.status(404).json({ message: 'Appointment not found' });
 
         // Staff කෙනෙක්ටත් වෙනස් කරන්න පුළුවන් වෙන්න Role Check එක හැදුවා මචං
-        if (appointment.doctorId.toString() !== req.user.id && req.user.role !== 'Staff' && req.user.role !== 'Admin') {
+        if (appointment.doctorId?._id?.toString() !== req.user.id && req.user.role !== 'Staff' && req.user.role !== 'Admin') {
             return res.status(403).json({ message: 'Not authorized to update this appointment' });
         }
 
         appointment.status = status;
         await appointment.save();
+
+        // ==================== 📧 NODEMAILER AUTOMATED TRIGGER ====================
+        // 🚀 ස්ටේටස් එක Approved හෝ Cancelled වුණු ගමන් පසුබිමෙන් (Background) ඊමේල් එකක් ෂොට් එක වගේ යවයි!
+        if (status === 'Approved' || status === 'Cancelled') {
+            const patientEmail = appointment.patientId?.email;
+            const patientName = appointment.patientId?.name || appointment.patientId?.username || 'Valued Patient';
+            
+            // 💡 දොස්තරගේ නම ඩේටාබේස් එකේ හැදියාව අනුව fallback එකත් එක්කම ගන්නවා මචං
+            const doctorName = appointment.doctorId?.name || 'Clinical Practitioner';
+
+            if (patientEmail) {
+                // await කරන්නේ නැතුව කෙලින්ම කෝල් කරන්නේ API එක බ්ලොක් නොවී ඊමේල් එක පසුබිමෙන් යන්න ඕන නිසා බං
+                sendAppointmentEmail(
+                    patientEmail,
+                    patientName,
+                    doctorName,
+                    appointment.date,
+                    appointment.timeSlot,
+                    status
+                );
+            }
+        }
+        // =========================================================================
 
         return res.status(200).json({ message: `Appointment status updated to ${status}! 🚀`, appointment });
     } catch (error) {
