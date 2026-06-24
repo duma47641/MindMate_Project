@@ -1,1 +1,45 @@
 @import "tailwindcss";
+
+/* 📅 FullCalendar Premium Dark-Theme Override (මෙන්න මෙතනින් පේස්ට් කරන්න බෝක්කා) */
+.fc {
+  --fc-border-color: #1e293b !important;
+  --fc-daygrid-event-dot-width: 8px !important;
+}
+.fc .fc-toolbar-title {
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  color: #2dd4bf !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.fc .fc-button-primary {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #94a3b8 !important;
+  font-size: 11px !important;
+  font-weight: bold !important;
+  border-radius: 10px !important;
+  text-transform: capitalize !important;
+}
+.fc .fc-button-primary:hover {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+.fc .fc-button-active {
+  background-color: #14b8a6 !important;
+  color: #020617 !important;
+}
+.fc-daygrid-day {
+  background-color: rgba(2, 6, 23, 0.3) !important;
+}
+.fc-day-today {
+  background-color: rgba(20, 184, 166, 0.1) !important;
+}
+.fc-event {
+  cursor: pointer !important;
+  padding: 3px 6px !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  font-size: 10px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}

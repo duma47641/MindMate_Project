@@ -2,8 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
+// 📅 FullCalendar Imports
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+
 function DoctorDashboard() {
-  const [activeMenu, setActiveMenu] = useState('appointments'); // Default Tab
+  // 🟢 [UI FIX]: ලොග් වුණු ගමන්ම මුලින්ම Calendar එක පෙන්වන්න Default එක 'dashboard' කළා බං
+  const [activeMenu, setActiveMenu] = useState('dashboard'); 
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [docInfo, setDocInfo] = useState({ id: '', name: 'Loading...', email: '' });
@@ -19,14 +24,14 @@ function DoctorDashboard() {
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
   const [passLoading, setPassLoading] = useState(false);
 
-  // 🔔 [Notification States]: දොස්තරට එන ලයිව් පොපැප් එක ට්‍රැක් කරන ස්ටේට්ස් බං
+  // 🔔 Notification States
   const [activeNotification, setActiveNotification] = useState(null);
   const lastCheckedMessagesCountRef = useRef(0);
   const isFirstLoadRef = useRef(true);
 
   const TOKEN = localStorage.getItem('token');
 
-  // 🔄 1. දොස්තරට අදාළ බුකින්ස් ටික සර්වර් එකෙන් ඇදලා ගැනීම
+  // 🔄 දොස්තරට අදාළ බුකින්ස් ටික සර්වර් එකෙන් ඇදලා ගැනීම
   const fetchAppointments = async () => {
     if (!TOKEN) return;
     setLoading(true);
@@ -41,16 +46,14 @@ function DoctorDashboard() {
     }
   };
 
-  // 🔔 [Global Background Listener]: දොස්තර වෙන කොහේ හිටියත් පේෂන්ට්ගෙන් එන මැසේජ් අල්ලන සුපිරි ලෝජික් එක බං
+  // 🔔 Global Background Listener for Live Notifications
   useEffect(() => {
     if (!TOKEN) return;
 
     const checkIncomingPatientMessages = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${TOKEN}` } };
-        // බැක්එන්ඩ් එකෙන් දොස්තරට ආපු හැම මැසේජ් එකක්ම ගන්නවා බං
         const { data } = await axios.get('http://localhost:5000/api/messages/history/all', config).catch(async () => {
-          // Fallback System: Endpoint එක නැත්නම් දැනට ඉන්න පේෂන්ට් කෙනෙක්ගෙන් එන ඒවා චෙක් කරනවා ක්‍රෑෂ් නොවී
           if (appointments.length > 0) {
             const paidApp = appointments.find(a => a.status === 'Paid');
             if (paidApp) {
@@ -62,13 +65,11 @@ function DoctorDashboard() {
         });
 
         if (Array.isArray(data) && data.length > 0) {
-          // පේෂන්ට් එවපු මැසේජ් විතරක් ෆිල්ටර් කරලා ගන්නවා (දොස්තරගේ ID එක නොවන ඒවා)
           const patientMessages = data.filter(m => m.senderId !== (docInfo.id || 'doctor'));
           
           if (patientMessages.length > lastCheckedMessagesCountRef.current) {
             const latestMsg = patientMessages[patientMessages.length - 1];
             
-            // 💡 දොස්තර දැනටමත් Live Chat ටැබ් එක ඇතුළේ නැත්නම් විතරක් පොපැප් එක මතු කරනවා මචං!
             if (activeMenu !== 'chat' && !isFirstLoadRef.current) {
               setActiveNotification({
                 senderName: latestMsg.senderName || "Active Mental Patient",
@@ -76,7 +77,6 @@ function DoctorDashboard() {
                 timestamp: new Date(latestMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
               });
 
-              // තත්පර 6කින් පොපැප් එක ඔටෝම ස්ක්‍රීන් එකෙන් අයින් වෙන්න සෙට් කරනවා බං
               setTimeout(() => { setActiveNotification(null); }, 6000);
             }
           }
@@ -88,7 +88,6 @@ function DoctorDashboard() {
       }
     };
 
-    // තත්පර 4න් 4ට පසුබිමෙන් සර්වර් එක චෙක් කරනවා බං
     const pollTimer = setInterval(checkIncomingPatientMessages, 4000);
     return () => clearInterval(pollTimer);
   }, [TOKEN, activeMenu, appointments, docInfo]);
@@ -96,7 +95,6 @@ function DoctorDashboard() {
   useEffect(() => {
     if (!TOKEN) { window.location.href = '/login'; return; }
 
-    // Token Decode කරලා දොස්තරගේ නම සහ ඊමේල් එක සයිඩ්බාර් එකට ගැනීම
     try {
       const base64Url = TOKEN.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -116,7 +114,7 @@ function DoctorDashboard() {
   }, [TOKEN]);
 
   useEffect(() => {
-    if (activeMenu === 'appointments') {
+    if (activeMenu === 'appointments' || activeMenu === 'dashboard') {
       fetchAppointments();
     }
   }, [activeMenu]);
@@ -179,10 +177,46 @@ function DoctorDashboard() {
       return sum + fee;
     }, 0);
 
+  // 📅 Calendar Event Mapper Logic
+  const calendarEvents = appointments.map(app => {
+    let statusColors = {
+      'Pending': '#f59e0b',
+      'Approved': '#06b6d4',
+      'Paid': '#10b981',
+      'Cancelled': '#ef4444'
+    };
+    const patientName = app.patientId?.name || app.patientId?.username || 'MindMate Patient';
+    return {
+      id: app._id,
+      title: `⏰ ${app.timeSlot} - ${patientName} (${app.status})`,
+      start: app.date,
+      backgroundColor: statusColors[app.status] || '#334155',
+      borderColor: statusColors[app.status] || '#334155',
+      textColor: '#020617',
+      extendedProps: { ...app }
+    };
+  });
+
+  const handleEventClick = (info) => {
+    const app = info.event.extendedProps;
+    const pName = app.patientId?.name || app.patientId?.username || 'MindMate Patient';
+    let actionMsg = `📋 CLIENT SESSION REPORT\n-------------------------------\n👤 Patient: ${pName}\n📅 Date: ${app.date}\n⏰ Slot: ${app.timeSlot}\n⚡ Status: ${app.status}\n\n`;
+
+    if (app.status === 'Pending') {
+      const option = window.confirm(`${actionMsg}Would you like to APPROVE this appointment request?\n\n[OK] = Approve Session\n[Cancel] = Keep Pending`);
+      if (option) handleStatusUpdate(app._id, 'Approved');
+    } else if (app.status === 'Paid') {
+      const option = window.confirm(`${actionMsg}This session is Paid & Verified.\nWould you like to open this patient's AI Mood Analytics?`);
+      if (option) openAnalytics(app.patientId?._id, pName);
+    } else {
+      alert(actionMsg + "No advanced interactions needed for this status log.");
+    }
+  };
+
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100 font-sans overflow-hidden relative">
       
-      {/* ==================== 🔔 [LIVE ALERT POPUP NOTIFICATION] ==================== */}
+      {/* 🔔 LIVE ALERT POPUP NOTIFICATION */}
       {activeNotification && (
         <div className="fixed top-5 right-5 z-50 bg-slate-900/95 border-2 border-teal-500/40 backdrop-blur-md text-slate-100 px-5 py-4 rounded-2xl shadow-2xl flex items-start gap-4 max-w-sm animate-slideIn">
           <div className="w-9 h-9 rounded-xl bg-teal-500/20 text-teal-400 font-black text-sm flex items-center justify-center shadow-inner">💬</div>
@@ -207,7 +241,9 @@ function DoctorDashboard() {
           </div>
 
           <nav className="p-4 space-y-2">
-            <button onClick={() => setActiveMenu('appointments')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'appointments' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}>📋 Patient Appointments</button>
+            {/* 🟢 [UI Fix]: මුලින්ම ලොඩ් වෙන Clinical Dashboard බටන් එක මචං */}
+            <button onClick={() => setActiveMenu('dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'dashboard' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}>📊 Clinical Scheduler Dashboard</button>
+            <button onClick={() => setActiveMenu('appointments')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'appointments' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}>📋 Patient Appointments List</button>
             <button onClick={() => setActiveMenu('chat')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'chat' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}>💬 Live Chat with Patient</button>
             <button onClick={() => setActiveMenu('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'settings' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}>⚙️ Account Settings</button>
           </nav>
@@ -229,42 +265,56 @@ function DoctorDashboard() {
       <div className="flex-1 flex flex-col h-full bg-slate-950 min-w-0">
         <header className="flex items-center justify-between px-6 py-4 bg-slate-900/80 border-b border-slate-800 backdrop-blur-md">
           <h1 className="text-lg font-bold tracking-wide text-teal-400">
-            {activeMenu === 'appointments' ? 'Patient Channeling Intake Log' : activeMenu === 'chat' ? 'Secure Clinical Messaging Desk' : 'Security Settings'}
+            {activeMenu === 'dashboard' ? 'Clinical Interactive Scheduler' : activeMenu === 'appointments' ? 'Patient Channeling Intake Log List' : activeMenu === 'chat' ? 'Secure Clinical Messaging Desk' : 'Security Settings'}
           </h1>
         </header>
 
-        {/* 1. 📋 APPOINTMENTS LIST VIEW */}
-        {activeMenu === 'appointments' && (
-          <div className="flex-1 overflow-y-auto p-8">
-            <div className="max-w-4xl mx-auto space-y-4">
+        {/* ==================== 📊 1. DEFAULT DASHBOARD VIEW (CALENDAR ONLY) ==================== */}
+        {activeMenu === 'dashboard' && (
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="max-w-5xl mx-auto">
+              {/* Stats Cards Row */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-lg">
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pending Sessions</p>
-                    <h3 className="text-2xl font-black text-amber-400 mt-1">{pendingCount}</h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Awaiting approval</p>
-                  </div>
+                  <div><p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pending Sessions</p><h3 className="text-2xl font-black text-amber-400 mt-1">{pendingCount}</h3></div>
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-md">⏳</div>
                 </div>
                 <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-lg">
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Approved Sessions</p>
-                    <h3 className="text-2xl font-black text-teal-400 mt-1">{approvedCount}</h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Active patients</p>
-                  </div>
+                  <div><p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Approved Sessions</p><h3 className="text-2xl font-black text-teal-400 mt-1">{approvedCount}</h3></div>
                   <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-md">✅</div>
                 </div>
                 <div className="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between shadow-lg border-emerald-500/10">
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Earnings</p>
-                    <h3 className="text-2xl font-black text-emerald-400 mt-1">LKR {totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}</h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5">Cleared sessions</p>
-                  </div>
+                  <div><p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Earnings</p><h3 className="text-2xl font-black text-emerald-400 mt-1">LKR {totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}</h3></div>
                   <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-md">💵</div>
                 </div>
               </div>
 
-              <h2 className="text-sm font-bold text-slate-300 mb-4">Active Consultation Intake</h2>
+              {/* FullCalendar Box */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
+                <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
+                  <div><h2 className="text-sm font-bold text-slate-200 tracking-wide">Interactive Clinical Calendar</h2><p className="text-[11px] text-slate-500 mt-0.5">Click any scheduled event block to manage records.</p></div>
+                  <div className="flex gap-3 text-[10px] bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+                    <span className="text-amber-400 font-semibold">● Pending</span><span className="text-cyan-400 font-semibold">● Approved</span><span className="text-emerald-400 font-semibold">● Paid</span>
+                  </div>
+                </div>
+                {loading ? (
+                  <p className="text-xs text-slate-500 text-center py-20">Loading interactive clinical timeline...</p>
+                ) : (
+                  <div className="premium-calendar-wrapper text-xs text-slate-200">
+                    <FullCalendar plugins={[dayGridPlugin]} initialView="dayGridMonth" events={calendarEvents} eventClick={handleEventClick} height="auto" headerToolbar={{ left: 'prev,next today', center: 'title', right: '' }} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ==================== 📋 2. PATIENT APPOINTMENTS LIST VIEW (THE ORIGINAL LIST EXTRACTED HERE) ==================== */}
+        {activeMenu === 'appointments' && (
+          <div className="flex-1 overflow-y-auto p-8">
+            <div className="max-w-4xl mx-auto space-y-4">
+              <h2 className="text-sm font-bold text-slate-300 mb-4 font-semibold">Active Consultation Intake Log List</h2>
+              
               {loading ? (
                 <p className="text-xs text-slate-500 text-center py-12">Loading requests from medical database...</p>
               ) : appointments.length === 0 ? (
@@ -272,6 +322,8 @@ function DoctorDashboard() {
               ) : (
                 appointments.map((app) => (
                   <div key={app._id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:border-slate-800/50 transition-colors">
+                    
+                    {/* Patient Core Details */}
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-lg">👤</div>
                       <div>
@@ -282,11 +334,13 @@ function DoctorDashboard() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Action Controls Box */}
                     <div className="flex items-center gap-2 justify-end">
                       {app.status === 'Pending' && (
                         <>
-                          <button onClick={() => handleStatusUpdate(app._id, 'Approved')} className="px-4 py-1.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs shadow-md">Approve</button>
-                          <button onClick={() => handleStatusUpdate(app._id, 'Cancelled')} className="px-4 py-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold rounded-xl">Decline</button>
+                          <button onClick={() => handleStatusUpdate(app._id, 'Approved')} className="px-4 py-1.5 bg-teal-500 text-slate-950 font-bold rounded-xl text-xs shadow-md hover:bg-teal-400 transition-colors">Approve</button>
+                          <button onClick={() => handleStatusUpdate(app._id, 'Cancelled')} className="px-4 py-1.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500 hover:text-white text-xs font-bold rounded-xl transition-all">Decline</button>
                         </>
                       )}
                       {app.status === 'Approved' && <span className="px-2.5 py-1 rounded-full text-xs font-bold border bg-cyan-500/10 text-cyan-400 border-cyan-500/20">Approved (Awaiting Payment)</span>}
@@ -294,10 +348,11 @@ function DoctorDashboard() {
                       {app.status === 'Paid' && (
                         <div className="flex items-center gap-3">
                           <span className="px-2.5 py-1 rounded-full text-xs font-bold border bg-emerald-500/20 text-emerald-400 border-emerald-500/40">● Paid & Confirmed 💵</span>
-                          <button onClick={() => openAnalytics(app.patientId?._id, app.patientId?.name)} className="px-4 py-1.5 bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs shadow-md">📊 View Mood Analytics</button>
+                          <button onClick={() => openAnalytics(app.patientId?._id, app.patientId?.name)} className="px-4 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-md">📊 View Mood Analytics</button>
                         </div>
                       )}
                     </div>
+
                   </div>
                 ))
               )}
@@ -305,10 +360,10 @@ function DoctorDashboard() {
           </div>
         )}
 
-        {/* 2. 💬 DOCTOR LIVE CHAT TAB SUB-COMPONENT */}
+        {/* ==================== 💬 3. DOCTOR LIVE CHAT TAB ==================== */}
         {activeMenu === 'chat' && <DoctorClinicalChatSection coreAppointments={appointments} docInfo={docInfo} TOKEN={TOKEN} />}
 
-        {/* 3. ⚙️ SETTINGS TAB */}
+        {/* ==================== ⚙️ 4. SETTINGS TAB ==================== */}
         {activeMenu === 'settings' && (
           <div className="flex-1 overflow-y-auto p-8 flex items-center justify-center">
             <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-6">
@@ -372,9 +427,7 @@ function DoctorDashboard() {
   );
 }
 
-// =========================================================================
-// 💬 [SUB-COMPONENT]: DOCTOR CLINICAL MESSAGING PORTAL (INTERNAL ENGINE)
-// =========================================================================
+// 💬 [SUB-COMPONENT]: DOCTOR CLINICAL MESSAGING PORTAL
 function DoctorClinicalChatSection({ coreAppointments, docInfo, TOKEN }) {
   const [activeChannel, setActiveChannel] = useState(null);
   const [chatLog, setChatLog] = useState([]);
@@ -382,7 +435,6 @@ function DoctorClinicalChatSection({ coreAppointments, docInfo, TOKEN }) {
   const [searchQuery, setSearchQuery] = useState('');
   const chatBottomRef = useRef(null);
 
-  // Active බුකින් ලිස්ට් එකෙන් සබඳතා ඇති ලෙඩ්ඩුන්ගේ (Unique Patients) ලිස්ට් එක හැදීම බං
   const patientDirectory = [];
   const map = new Map();
   
