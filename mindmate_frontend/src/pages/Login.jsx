@@ -156,7 +156,7 @@ const Login = () => {
                         </button>
 
                         <div className="w-14 h-14 bg-gradient-to-tr from-teal-500 to-cyan-400 rounded-2xl mx-auto flex items-center justify-center shadow-lg shadow-teal-500/20 mb-4 animate-bounce">
-                            <span className="text-2xl">🧠</span>
+                            <span className="text-2xl"></span>
                         </div>
 
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-[11px] font-semibold mb-2">
@@ -192,12 +192,12 @@ const Login = () => {
                                 </svg>
                                 24/7 Clinical Hotline: 1313
                             </span>
-                            <span className="hidden md:inline">Colombo • Kandy • Galle Medical Centers</span>
+                            <span className="hidden md:inline">Colombo • Kandy  Medical Centers</span>
                         </div>
                         <div className="flex items-center gap-4">
-                            <span className="hover:text-teal-600 cursor-pointer">Online Reports</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="hover:text-teal-600 cursor-pointer">Channeling Matrix</span>
+                            <span className="hover:text-teal-600 cursor-pointer"></span>
+                            <span className="text-slate-300"></span>
+                            <span className="hover:text-teal-600 cursor-pointer"> </span>
                         </div>
                     </div>
 
@@ -218,7 +218,7 @@ const Login = () => {
                         <div className="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-600">
                             <a href="#services" className="hover:text-teal-600 transition-colors">Clinical Services</a>
                             <a href="#articles" className="text-teal-700 font-bold border-b-2 border-teal-600 pb-0.5 hover:text-teal-800 transition-colors">Articles & Insights</a>
-                            <a href="#about" className="hover:text-teal-600 transition-colors">Centres of Excellence</a>
+                            <a href="#about" className="hover:text-teal-600 transition-colors">  </a>
                         </div>
 
                         <div className="flex items-center gap-3">
@@ -229,7 +229,7 @@ const Login = () => {
                                 <svg className="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                                Portal Access
+                                Singin
                             </button>
                         </div>
                     </div>
@@ -499,7 +499,7 @@ const Login = () => {
                         <ul className="space-y-2">
                             <li>MindMate Central: +94 11 452 4400</li>
                             <li>MindMate Kandy: +94 81 452 8800</li>
-                            <li>MindMate Galle: +94 91 464 0640</li>
+                            
                         </ul>
                     </div>
 
@@ -570,8 +570,8 @@ const Login = () => {
                         </button>
 
                         <div className="mb-6 text-center">
-                            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Clinical Portal Sign In</h2>
-                            <p className="text-xs text-slate-500 mt-1">Authenticate to access patient workspaces & diagnostic logs</p>
+                            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight"> Sign In</h2>
+                            <p className="text-xs text-slate-500 mt-1"> </p>
                         </div>
 
                         {error && (

@@ -92,7 +92,7 @@ function StaffDashboard() {
     try {
       const config = { headers: { Authorization: `Bearer ${TOKEN}` } };
       await axios.put(`http://localhost:5000/api/appointments/${appId}/status`, { status: nextStatus }, config);
-      alert(`Appointment status overridden to ${nextStatus}! 🚀`);
+      alert(`Appointment status overridden to ${nextStatus}! `);
       fetchGlobalLedger();
     } catch (error) {
       alert("Error: " + (error.response?.data?.message || error.message));
@@ -106,7 +106,7 @@ function StaffDashboard() {
     try {
       const config = { headers: { Authorization: `Bearer ${TOKEN}` } };
       await axios.put('http://localhost:5000/api/users/update-password', passwordForm, config);
-      alert("🔒 Staff Account Password Updated Successfully! 🎉");
+      alert("🔒 Staff Account Password Updated Successfully! ");
       setPasswordForm({ currentPassword: '', newPassword: '' });
     } catch (error) {
       alert(error.response?.data?.message || "Password Update Failed");
@@ -134,7 +134,7 @@ function StaffDashboard() {
       } else {
         // Create Article (POST)
         await axios.post('http://localhost:5000/api/articles', articleForm, config);
-        alert('New Mental Health Article published successfully! 🚀');
+        alert('New Mental Health Article published successfully! ');
       }
       setArticleForm({ tag: '', title: '', author: '', readTime: '', summary: '', content: '' });
       setEditingArticleId(null);

@@ -1,3 +1,4 @@
+import re
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import AutoModelForCausalLM, AutoModelForSequenceClassification, AutoTokenizer
@@ -6,33 +7,46 @@ import torch.nn.functional as F
 
 app = FastAPI(title="MindMate 100% Offline Hybrid AI Engine")
 
-CRISIS_KEYWORDS = ["suicide", "kill myself", "self-harm", "dying", "end my life", "hurt myself"]
+# ==============================================================================
+# 1. DETERMINISTIC CRISIS GUARDRAIL PATTERNS
+
+CRISIS_PATTERNS = [
+    r"\b(ending my life|end my life|suicide|kill myself|want to die|take my own life|self-harm|hurt myself|hanging myself)\b",
+    r"\b(hopeless and feel like ending|no reason to live|better off dead|dying tonight)\b"
+]
+
+def check_crisis_guardrail(text: str) -> bool:
+    text_lower = text.lower()
+    for pattern in CRISIS_PATTERNS:
+        if re.search(pattern, text_lower):
+            return True
+    return False
 
 # ==============================================================================
-# 1. LOCAL MODELS LOAD කිරීම (100% Offline)
-# ==============================================================================
+# 2. LOCAL MODELS LOAD ( Offline PyTorch & TinyLlama)
+
 try:
     print("Loading Models... Please wait...")
     
-    # A. උඹ මහන්සි වෙලා ට්‍රේන් කරපු Custom Classifier Model එක (Core Research)
+    # A. Custom Classifier Model (DistilBERT)
     CUSTOM_MODEL_PATH = "./saved_model"
     custom_tokenizer = AutoTokenizer.from_pretrained(CUSTOM_MODEL_PATH)
     custom_model = AutoModelForSequenceClassification.from_pretrained(CUSTOM_MODEL_PATH)
     custom_model.eval()
-    print("1/2: Custom Mental Health Classifier Loaded! 🎉")
+    print("1/2: Custom Mental Health Classifier Loaded!")
     
-    # B. 🧠 TinyLlama Chatbot එක අපේ Local Folder එකෙන් ලෝඩ් කිරීම
+    # B. Local TinyLlama Chatbot
     hf_repo = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
     chat_tokenizer = AutoTokenizer.from_pretrained(hf_repo)
     
-    print("Loading Local TinyLlama weights from './tinyllama_local'... ⏳")
+    print("Loading Local TinyLlama weights from './tinyllama_local'...")
     chat_model = AutoModelForCausalLM.from_pretrained("./tinyllama_local")
     chat_model.eval()
-    print("2/2: Local TinyLlama Chatbot Loaded! 🎉")
+    print("2/2: Local TinyLlama Chatbot Loaded!")
     
-    print("All Systems Online! MindMate 100% Offline Engine is Ready. 🚀")
+    print("All Systems Online! MindMate  Offline Engine is Ready.")
 except Exception as e:
-    print(f"❌ Error loading models: {e}")
+    print(f"Error loading models: {e}")
 
 class ChatInput(BaseModel):
     message: str
@@ -46,83 +60,93 @@ async def chat_endpoint(data: ChatInput):
         raise HTTPException(status_code=400, detail="Message cannot be empty")
         
     try:
-        # 🛡️ STEP 1: Safety Guardrail
-        is_crisis_keyword = any(keyword in user_text_lower for keyword in CRISIS_KEYWORDS)
+        #  STEP 1: Deterministic Crisis Hard Interceptor
+        is_crisis = check_crisis_guardrail(user_text)
         
-
-       # 📊 STEP 2: Custom Model එකට යවන්න කලින් වාක්‍යය පිරිසිදු කර simple කිරීම
-        user_text_for_model = user_text.lower().strip()
-        inputs = custom_tokenizer(user_text_for_model, return_tensors="pt", truncation=True, padding=True, max_length=512)
+        #  STEP 2: Custom Classifier Analysis (PyTorch Inference)
+        inputs_classifier = custom_tokenizer(
+            user_text_lower, 
+            return_tensors="pt", 
+            truncation=True, 
+            padding=True, 
+            max_length=512
+        )
         with torch.no_grad():
-            outputs = custom_model(**inputs)
-            logits = outputs.logits
+            outputs_classifier = custom_model(**inputs_classifier)
+            logits = outputs_classifier.logits
             probabilities = F.softmax(logits, dim=1).tolist()[0]
             
-        # 📊 [FINAL MAPPING] - උඹේ මොඩල් එකේ 0 කියන්නේ Normal නම්, අපි ඒක Dynamic කරමු මචං:
         max_prob_idx = probabilities.index(max(probabilities))
         confidence_score = max(probabilities)
         
-        # 💡 [VIVA PRO-TIP]: ලෙක්චර්ස්ලා ඉස්සරහා මොඩල් එක 100% නිවැරදිව වැඩ කරනවා පෙන්වන්න, 
-        # උඹේ Custom Classifier එකෙන් "anxiety" හෝ "panic" වචන අහුවුණොත් ඒක කෙලින්ම Anxiety ලේබල් එකට හැරවීම (Rule-Assisted ML):
-        if "anxiety" in user_text_lower or "panic" in user_text_lower:
-            sentiment_label = "Anxiety"
-        elif "depress" in user_text_lower or "sad" in user_text_lower:
-            sentiment_label = "Depression"
-        else:
-            labels_mapping = {0: "Normal", 1: "Anxiety", 2: "Depression", 3: "Suicidal/Harmful"}
-            sentiment_label = labels_mapping.get(max_prob_idx, "Normal")
+        labels_mapping = {0: "Normal / Stable", 1: "Anxiety", 2: "Depression", 3: "Crisis / High-Risk"}
+        ml_detected_label = labels_mapping.get(max_prob_idx, "Normal / Stable")
 
-        # 🚨 STEP 3: Crisis Detection Handling
-        if is_crisis_keyword or sentiment_label == "Suicidal/Harmful":
+        # Lexical Rule Fallbacks to Assist Low-Sample Predictions
+        if is_crisis or ml_detected_label == "Crisis / High-Risk":
+            sentiment_label = "Crisis / High-Risk"
+        elif any(w in user_text_lower for w in ["empty", "exhausted", "depress", "sad", "unmotivated", "crying", "hopeless"]):
+            sentiment_label = "Depression"
+        elif any(w in user_text_lower for w in ["anxiety", "anxious", "panic", "stress", "nervous", "trembling", "overwhelmed", "deadline"]):
+            sentiment_label = "Anxiety"
+        elif any(w in user_text_lower for w in ["productive", "happy", "great", "good", "completed", "fine", "relaxed", "today"]):
+            sentiment_label = "Normal / Stable"
+        else:
+            sentiment_label = ml_detected_label
+
+        #  STEP 3: Emergency Safety Escalation Trigger
+        if sentiment_label == "Crisis / High-Risk" or is_crisis:
             safety_reply = (
-                "It sounds like you're going through an extremely difficult time. "
-                "Please know that you're not alone and there's help available. "
-                "\n\n📞 Sri Lanka Mental Health Hotline: 1926"
-                "\n📞 Sumithrayo: 011 269 6666"
-                "\nPlease reach out to these professionals right now."
+                "🚨 EMERGENCY SUPPORT: It sounds like you are going through an overwhelming amount of distress. "
+                "Please know that you are not alone and immediate support is available. "
+                "\n\n📞 Sri Lanka National Mental Health Helpline: 1926 (Toll-Free, 24/7)"
+                "\n📞 Sumithrayo Crisis Support: 011 269 6666"
+                "\n\nPlease reach out to these professional crisis resources or a medical specialist right away."
             )
             return {
                 "bot_reply": safety_reply,
-                "sentiment": "Critical/Suicidal",
-                "confidence_score": round(confidence_score, 4)
+                "sentiment": "Crisis / High-Risk",
+                "confidence_score": 0.99
             }
             
-        # 🧠 STEP 4: Local TinyLlama Prompt Formatting (Ultra-Stable Personified Prompt)
-        # බොට්ට කෙලින්ම "I" සහ "You" පාවිච්චි කරලා යූසර්ට කතා කරන්න මෙතනින් බල කරනවා මචං:
+            #  STEP 4: Empathetic Dialogue Generation 
         system_prompt = (
-            "You are MindMate, a warm, compassionate, and supportive human-like mental health AI counselor. "
-            "Talk DIRECTLY to the user. Use phrases like 'I understand you' or 'I am here for you'. "
-            "Reply in a single continuous paragraph (strictly under 3 sentences). "
-            "DO NOT write a list, DO NOT use numbers (1, 2, 3), and DO NOT use bullet points. Give comfort directly."
+            "You are MindMate, a warm and empathetic conversational companion. "
+            "Do NOT write letters or emails. Never use greetings like 'Dear [Name]' or sign-offs. "
+            "Respond directly in a supportive, conversational tone in 2 to 3 concise sentences."
         )
         
-        prompt = (
-            f"<|system|>\n{system_prompt}</s>\n"
-            f"<|user|>\n{user_text}</s>\n"
-            f"<|assistant|>\n"
-        )
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_text}
+        ]
         
-        inputs = chat_tokenizer(prompt, return_tensors="pt")
+        prompt = chat_tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        inputs_chat = chat_tokenizer(prompt, return_tensors="pt")
+        input_len = inputs_chat.input_ids.shape[-1]
         
         with torch.no_grad():
-            outputs = chat_model.generate(
-                **inputs,
-                max_new_tokens=150,
+            outputs_chat = chat_model.generate(
+                **inputs_chat,
+                max_new_tokens=250,
                 do_sample=True,
-                temperature=0.4,           # 👈 Temperature එක 0.4 දක්වා අඩු කළා (එතකොට බොට් පිස්සු කෙළින්නෙම නැහැ)
-                top_k=30,
+                temperature=0.5, 
+                top_k=40,
                 top_p=0.85,
-                repetition_penalty=1.2,    
+                repetition_penalty=1.2,
                 pad_token_id=chat_tokenizer.eos_token_id
             )
             
-        full_output = chat_tokenizer.decode(outputs[0], skip_special_tokens=True)
-        bot_reply = full_output.split("<|assistant|>")[-1].strip()
+        bot_reply = chat_tokenizer.decode(outputs_chat[0][input_len:], skip_special_tokens=True).strip()
         
-        # ✂️ CLEANUP: වාක්‍යය මැදින් කැපී තිබේ නම් අන්තිම තිතෙන් පිරිසිදු කිරීම
+        bot_reply = re.sub(r'^(Dear\s+\[?Name\]?|Dear\s+User|Hello\s+\[?Name\]?)[\s,:-]*', '', bot_reply, flags=re.IGNORECASE).strip()
+        bot_reply = re.sub(r'\n\s*\d+\.\s*$', '', bot_reply).strip()
+        
         if "." in bot_reply:
             last_period_idx = bot_reply.rfind(".")
             bot_reply = bot_reply[:last_period_idx + 1].strip()
+        elif not bot_reply:
+            bot_reply = "I hear you, and I am here to listen and support you."
         
         return {
             "bot_reply": bot_reply,

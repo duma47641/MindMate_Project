@@ -168,4 +168,61 @@ export const updateDoctorPassword = async (req, res) => {
     } catch (error) {
         return res.status(500).json({ message: "Server Error: " + error.message });
     }
+
+    
+};
+
+
+// ➕ 6. Admin මඟින් නව Doctor හෝ Staff Account එකක් සෑදීම
+export const registerUser = async (req, res) => {
+    const { name, email, password, role, phone, specialization, fee, bio, slots, address } = req.body;
+
+    try {
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "Name, email, and password are required!" });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+
+        // 1. Email එක කලින් තියෙනවද බැලීම
+        const userExists = await User.findOne({ email: normalizedEmail });
+        if (userExists) {
+            return res.status(400).json({ message: "Email already registered in system!" });
+        }
+
+        // 2. User Document එක සෑදීම (Plain password එක දෙන්න - User model pre-save එකෙන් hash වේ)
+        const user = await User.create({
+            name,
+            email: normalizedEmail,
+            password: password,
+            role: role || 'Doctor'
+        });
+
+        // 3. Role එක Doctor නම් DoctorProfile සෑදීම
+        if (user.role === 'Doctor') {
+            await DoctorProfile.create({
+                userId: user._id,
+                name: user.name,
+                phone: phone || '',
+                specialization: specialization || 'Mental Health Specialist',
+                fee: fee ? Number(fee) : 2500,
+                bio: bio || 'Dedicated mental health specialist.',
+                slots: slots || 'Morning Slot (9:00 AM), Evening Slot (4:00 PM)'
+            });
+        } 
+        // 4. Role එක Staff නම් StaffProfile සෑදීම
+        else if (user.role === 'Staff') {
+            await StaffProfile.create({
+                userId: user._id,
+                name: user.name,
+                phone: phone || '',
+                address: address || 'Colombo, Sri Lanka'
+            });
+        }
+
+        return res.status(201).json({ message: `${user.role} account created successfully! 🎉` });
+    } catch (error) {
+        console.error("Registration Error:", error);
+        return res.status(500).json({ message: "Registration Failed: " + error.message });
+    }
 };

@@ -213,7 +213,7 @@ function ClinicalChat() {
             <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-950">
               {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-2 opacity-50">
-                  <span className="text-3xl">💬</span>
+                  <span className="text-3xl"></span>
                   <p className="text-[11px] text-slate-400">No previous messages in logs. Type below to initiate transmission.</p>
                 </div>
               ) : (
@@ -256,7 +256,7 @@ function ClinicalChat() {
                   disabled={!newMessageText.trim()}
                   className="px-4 py-2 bg-teal-500 hover:bg-teal-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-bold rounded-lg text-xs tracking-wider transition-colors"
                 >
-                  SEND 🚀
+                  SEND 
                 </button>
               </div>
             </form>
@@ -264,7 +264,7 @@ function ClinicalChat() {
         ) : (
           /* Empty Initial State */
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-2xl shadow-xl">💬</div>
+            <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-2xl shadow-xl"></div>
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest">Medical Communication Desk</h3>
               <p className="text-[11px] text-slate-500 max-w-xs leading-relaxed">Select an active Doctor or Patient profile from the directory on the left to activate secure counseling log.</p>

@@ -4,8 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "start": "node server.js",
+  "test": "jest --detectOpenHandles"
   },
+
+  
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -27,4 +30,12 @@
     "mongoose": "^9.6.3",
     "nodemailer": "^9.0.0"
   }
+  
+  
+
+
+
+
+
+
 }
