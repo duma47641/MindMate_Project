@@ -1,20 +1,20 @@
 import Message from '../models/Message.js';
 import User from '../models/User.js';
-import DoctorProfile from '../models/DoctorProfile.js'; // 💡 ඩොක්ටර් ප්‍රොෆයිල් මොඩල් එක ලින්ක් කළා මචං
+import DoctorProfile from '../models/DoctorProfile.js'; 
 
 // =========================================================================
-// 💬 1. අලුතින් මැසේජ් එකක් යැවීම (Send Message)
-// =========================================================================
+//  1. Send New  Message
+
 export const sendMessage = async (req, res) => {
     const { receiverId, message } = req.body;
-    const senderId = req.user.id; // ලොග් වෙලා ඉන්න කෙනාගේ ID එක මචං
+    const senderId = req.user.id; 
 
     try {
         if (!receiverId || !message) {
             return res.status(400).json({ message: 'Receiver and message content are required!' });
         }
 
-        // 💡 [Smart ID Resolver]: receiverId එක DoctorProfile ID එකක් නම්, ඒක ඔටෝම දොස්තරගේ User ID එකට හරවා ගන්නවා බං!
+        // Smart ID Resolver
         let finalReceiverId = receiverId;
         const profileCheck = await DoctorProfile.findById(receiverId);
         if (profileCheck && profileCheck.userId) {
@@ -34,21 +34,20 @@ export const sendMessage = async (req, res) => {
 };
 
 // =========================================================================
-// 📜 2. පුද්ගලයන් දෙදෙනෙකු අතර මුළු චැට් හිස්ට්‍රි එකම ඇදීම (Get Chat History)
-// =========================================================================
+//  2. Get Chat History
+
 export const getChatHistory = async (req, res) => {
     const { otherUserId } = req.params;
     const myId = req.user.id;
 
     try {
-        // 💡 [Smart ID Resolver]: otherUserId එක DoctorProfile ID එකක් නම්, ඒකත් User ID එකට හරවා ගන්නවා මචං
+        // Smart ID Resolver
         let finalOtherUserId = otherUserId;
         const profileCheck = await DoctorProfile.findById(otherUserId);
         if (profileCheck && profileCheck.userId) {
             finalOtherUserId = profileCheck.userId;
         }
 
-        // මම යවපු ඒවා සහ මට එවපු ඒවා ඔක්කොම කාලาනුක්‍රමිකව (sort) කරලා ඇදලා ගන්නවා බං
         const chat = await Message.find({
             $or: [
                 { senderId: myId, receiverId: finalOtherUserId },
@@ -56,7 +55,7 @@ export const getChatHistory = async (req, res) => {
             ]
         }).sort({ createdAt: 1 });
 
-        // කියවපු නැති මැසේජ් තියෙනවා නම් ඒවා Read විදිහට මාක් කරනවා මචං
+        //If there are any unread messages, I'll mark them as read, mate.
         await Message.updateMany(
             { senderId: finalOtherUserId, receiverId: myId, read: false },
             { $set: { read: true } }
@@ -69,14 +68,13 @@ export const getChatHistory = async (req, res) => {
 };
 
 // =========================================================================
-// 👥 3. චැට් කරපු ලයිස්තුව ලබාගැනීම (Get Active Contacts)
-// =========================================================================
+//  3. Get Active Contacts (Chats)
+
 export const getActiveContacts = async (req, res) => {
     const myId = req.user.id;
     const myRole = req.user.role;
 
     try {
-        // මම මැසේජ් කරපු හෝ මට මැසේජ් එවපු හැමෝගෙම Unique IDs ටික ගන්නවා
         const messages = await Message.find({
             $or: [{ senderId: myId }, { receiverId: myId }]
         });
@@ -87,7 +85,6 @@ export const getActiveContacts = async (req, res) => {
             if (msg.receiverId.toString() !== myId.toString()) contactIds.add(msg.receiverId.toString());
         });
 
-        // 💡 ඩේටාබේස් එකේ වැරදිලා හෝ Profile ID එකකින් සේව් වුණු ඒවා තිබුණොත්, ඒවා ඔක්කොම User IDs වලට හරවනවා
         const resolvedContactIds = [];
         for (const id of Array.from(contactIds)) {
             const profile = await DoctorProfile.findById(id);
@@ -98,7 +95,6 @@ export const getActiveContacts = async (req, res) => {
             }
         }
 
-        // ඒ හැම යූසර් කෙනෙක්ගේම නම සහ ඊමේල් විතරක් ලස්සනට ඩේටาබේස් එකෙන් ඇදලා ගන්නවා බං
         const contacts = await User.find({ _id: { $in: resolvedContactIds } })
             .select('name email role')
             .lean();

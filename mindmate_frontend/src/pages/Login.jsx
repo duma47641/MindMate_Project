@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
 const Login = () => {
-    // 🟢 Welcome Auto Banner State (Shows for 3s on initial page load)
+    //  Welcome Auto Banner State (Shows for 3s on initial page load)
     const [showWelcomeBanner, setShowWelcomeBanner] = useState(true);
 
     // Modal Controls
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedArticle, setSelectedArticle] = useState(null); // Article Reader Modal State
+    const [selectedArticle, setSelectedArticle] = useState(null);
 
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
@@ -14,10 +14,9 @@ const Login = () => {
     // Dynamic Mental Health Articles State (Fetched from Backend)
     const [articles, setArticles] = useState([]);
     const [articlesLoading, setArticlesLoading] = useState(true);
-        // 🟢 Carousel State for Single Centered Card
     const [currentArticleIndex, setCurrentArticleIndex] = useState(0);
 
-    // ⏱️ Auto Slide every 3 seconds
+    // ⏱ Auto Slide every 3 seconds
     useEffect(() => {
         if (articles.length <= 1) return;
 
@@ -28,19 +27,19 @@ const Login = () => {
         return () => clearInterval(interval);
     }, [articles]);
 
-    // ◀️ Manual Previous Button Handler
+    // Manual Previous Button Handler
     const handlePrevArticle = () => {
         setCurrentArticleIndex((prevIndex) => 
             prevIndex === 0 ? articles.length - 1 : prevIndex - 1
         );
     };
 
-    // ▶️ Manual Next Button Handler
+    //  Manual Next Button Handler
     const handleNextArticle = () => {
         setCurrentArticleIndex((prevIndex) => (prevIndex + 1) % articles.length);
     };
 
-    // ⏱️ Auto-dismiss Welcome Banner after 3 seconds
+    //  Auto-dismiss Welcome Banner after 3 seconds
     useEffect(() => {
         const timer = setTimeout(() => {
             setShowWelcomeBanner(false);
@@ -49,7 +48,7 @@ const Login = () => {
         return () => clearTimeout(timer);
     }, []);
 
-    // 🔄 Backend API එකෙන් Articles Dynamic Load කරගැනීම
+    // Backend API Articles Dynamic Load 
     useEffect(() => {
         const fetchArticles = async () => {
             try {
@@ -140,7 +139,7 @@ const Login = () => {
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col relative">
             
-            {/* 🟢 0. CENTERED WELCOME POPUP BANNER (Disappears after 3s) */}
+            {/*   CENTERED WELCOME POPUP BANNER (Disappears after 3s) */}
             {showWelcomeBanner && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none animate-in fade-in zoom-in duration-300">
                     <div className="bg-slate-900/90 backdrop-blur-xl border border-teal-500/40 p-6 sm:p-8 rounded-3xl shadow-2xl text-center max-w-lg w-full pointer-events-auto relative transform transition-all">
@@ -325,7 +324,7 @@ const Login = () => {
                     ) : (
                         <div className="max-w-xl mx-auto flex flex-col items-center">
                             
-                            {/* 🌊 Centered Light Blue Gradient Card */}
+                            {/* Centered Light Blue Gradient Card */}
                             <div 
                                 key={articles[currentArticleIndex]?._id || currentArticleIndex}
                                 className="w-full bg-gradient-to-br from-sky-400 via-sky-500 to-blue-600 rounded-3xl p-8 shadow-2xl text-white border border-white/20 relative min-h-[300px] flex flex-col justify-between transition-all duration-500 animate-in fade-in zoom-in-95"
@@ -366,7 +365,7 @@ const Login = () => {
                                 </div>
                             </div>
 
-                            {/* 🔘 Bottom Carousel Navigation Arrows & Indicators */}
+                            {/*  Bottom Carousel Navigation Arrows & Indicators */}
                             <div className="flex items-center justify-between w-full mt-6 px-2">
                                 
                                 {/* Indicators (Dots) */}

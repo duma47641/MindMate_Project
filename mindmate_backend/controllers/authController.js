@@ -3,12 +3,12 @@ import DoctorProfile from '../models/DoctorProfile.js';
 import StaffProfile from '../models/StaffProfile.js';
 import jwt from 'jsonwebtoken';
 
-// 🟢 [The Ultimate Token Generator Fix]: ටෝකන් එක ජෙනරේට් කරන කොටසටම මුළු යූසර් ඔබ්ජෙක්ට් එකම පැක් කළා මචං!
+//  The Ultimate Token Generator Fix
 const generateToken = (user) => {
     return jwt.sign(
         { 
             id: user._id, 
-            name: user.name || user.username || user.fullName, // 💡 නම මොන කී එකෙන් තිබ්බත් dynamic අල්ලනවා බං
+            name: user.name || user.username || user.fullName, 
             email: user.email,
             role: user.role 
         }, 
@@ -18,23 +18,24 @@ const generateToken = (user) => {
 };
 
 // =========================================================================
-// 🚀 1. REGISTRATION CONTROLLER (Handles Patient, Doctor, and Staff)
-// =========================================================================
+//  1. REGISTRATION CONTROLLER (Handles Patient, Doctor, and Staff)
 export const registerUser = async (req, res) => {
     const { name, email, password, role, phone, specialization, fee, bio, slots, address } = req.body;
     
     try {
-        // 1. ඊමේල් එක දැනටමත් ඩේටාබේස් එකේ තියෙනවද බැලීම
+        // 1. Check if the email already exists in the database.
         const userExists = await User.findOne({ email });
         if (userExists) return res.status(400).json({ message: 'User already exists' });
 
-        // 2. ප්‍රධාන User කලෙක්ෂන් එකේ එකවුන්ට් එක සේව් කිරීම
+        // 2. Saving the account in the main User collection
+
         const user = await User.create({ name, email, password, role: role || 'Patient' });
 
-        // 3. Role එක අනුව අදාළ කලෙක්ෂන් එකට දත්ත බෙදා හැරීම
+        // 3. Distributing data to the relevant collection based on the role
+
         if (user.role === 'Doctor') {
             await DoctorProfile.create({
-                userId: user._id, // 🔗 ලින්ක් එක සෙට් කළා මචං
+                userId: user._id, 
                 phone,
                 specialization,
                 fee: Number(fee) || 0,
@@ -43,13 +44,12 @@ export const registerUser = async (req, res) => {
             });
         } else if (user.role === 'Staff') {
             await StaffProfile.create({
-                userId: user._id, // 🔗 ලින්ක් එක සෙට් කළා
+                userId: user._id, 
                 phone,
                 address
             });
         }
 
-        // 💡 [The Token Fix Applied]: රෙජිස්ටර් වෙන වෙලාවෙත් ටෝකන් එක සුපිරියටම පැක් වෙලා යනවා බං
         const token = generateToken(user);
 
         return res.status(201).json({
@@ -57,8 +57,8 @@ export const registerUser = async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
-            token: token, // 👈 පර්ෆෙක්ට් පැකේජ් එක
-            message: `${user.role} registered successfully! 🎉`
+            token: token, 
+            message: `${user.role} registered successfully! `
         });
 
     } catch (error) {
@@ -67,21 +67,21 @@ export const registerUser = async (req, res) => {
 };
 
 // =========================================================================
-// 🔐 2. UNIVERSAL LOGIN CONTROLLER
-// =========================================================================
+//  2.  LOGIN CONTROLLER
+
 export const loginUser = async (req, res) => {
     const { email, password } = req.body;
     try {
         const user = await User.findOne({ email });
         
-        // 🟢 [Safe Check] - යූසර් කෙනෙක් හමුවුණොත් විතරක් පැස්වර්ඩ් චෙක් කරනවා මචං!
+        
         if (user) {
             const isMatch = (user.password && user.password.startsWith('$2b$')) 
                 ? await user.matchPassword(password) 
                 : user.password === password;
 
             if (isMatch) {
-                // 💡 [The Token Fix Applied]: ලොගින් වෙන වෙලාවේ අලුත්ම පැක් වෙච්ච සුපිරි ටෝකන් එක හැදෙනවා
+
                 const token = generateToken(user);
 
                 return res.status(200).json({
@@ -89,7 +89,7 @@ export const loginUser = async (req, res) => {
                     name: user.name,
                     email: user.email,
                     role: user.role,
-                    token: token // 👈 මේ ටෝකන් එක දැන් ෆ්‍රන්ට්එන්ඩ් එකට සටස් ගාලා ඩේටා ටික දෙනවා මචං
+                    token: token 
                 });
             }
         }
@@ -101,20 +101,20 @@ export const loginUser = async (req, res) => {
 };
 
 
-        // 🔄 UNIVERSAL ACCOUNTS UPDATE CONTROLLER (For Admin/Users)
+        //   ACCOUNTS UPDATE CONTROLLER (For Admin/Users)
 export const updateUserProfile = async (req, res) => {
     const { name, email, phone, role, specialization, fee, address } = req.body;
     try {
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ message: 'User profile not found' });
 
-        // 1. ප්‍රධාන User මොඩල් එකේ දත්ත අප්ඩේට් කිරීම
+    // 1. Updating data in the main User model
         user.name = name || user.name;
         user.email = email || user.email;
         if (role) user.role = role;
         await user.save();
 
-        // 2. Role එක අනුව අදාළ Profile කලෙක්ෂන් එකේ දත්ත අප්ඩේට් කිරීම
+    // 2. Updating data in the relevant Profile collection based on the role
         if (user.role === 'Doctor') {
             await DoctorProfile.findOneAndUpdate(
                 { userId: user._id },

@@ -1,9 +1,9 @@
 import nodemailer from 'nodemailer';
 
-// 🚀 Universal Email Sending Function එක
+// Email Sending Function 
 export const sendAppointmentEmail = async (patientEmail, patientName, doctorName, date, timeSlot, status) => {
     try {
-        // 🟢 [The Ultimate Fix]: සර්වර් එක ලෝඩ් වුණාට පස්සේ, ඊමේල් එකක් යවන ලයිව් මොහොතේම විතරක් env එක කියවන්න ෆන්ක්ෂන් එක ඇතුළටම දැම්මා බං!
+      
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -31,11 +31,11 @@ export const sendAppointmentEmail = async (patientEmail, patientName, doctorName
             return;
         }
 
-        // 🎨 Premium Dark-Themed HTML Template
+        //   Dark-Themed HTML Template
         const htmlContent = `
         <div style="background-color: #020617; color: #f1f5f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; border-radius: 16px; max-width: 550px; margin: auto; border: 1px solid #1e293b;">
             <div style="text-align: center; border-bottom: 1px solid #1e293b; padding-bottom: 20px;">
-                <h2 style="color: #2dd4bf; margin: 0; font-size: 22px;">🧠 MindMate Medical Portal</h2>
+                <h2 style="color: #2dd4bf; margin: 0; font-size: 22px;"> MindMate Medical Portal</h2>
                 <p style="color: #94a3b8; font-size: 11px; margin: 5px 0 0 0;">Official Clinical Notification</p>
             </div>
             <div style="background-color: ${statusColor}15; border: 1px solid ${statusColor}40; border-radius: 12px; padding: 15px; margin-top: 25px; text-align: center;">
@@ -67,10 +67,9 @@ export const sendAppointmentEmail = async (patientEmail, patientName, doctorName
             html: htmlContent
         };
 
-        // 🚀 ඊමේල් එක සටස් ගාලා යැවීම
         await transporter.sendMail(mailOptions);
-        console.log(`📧 Notification Email successfully sent to ${patientEmail} [Status: ${status}]`);
+        console.log(` Notification Email successfully sent to ${patientEmail} [Status: ${status}]`);
     } catch (error) {
-        console.error("❌ Nodemailer engine execution failure:", error.message);
+        console.error(" Nodemailer engine execution failure:", error.message);
     }
 };

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* 📅 FullCalendar Premium Dark-Theme Override (මෙන්න මෙතනින් පේස්ට් කරන්න බෝක්කා) */
+/* FullCalendar Premium Dark-Theme Override  */
 .fc {
   --fc-border-color: #1e293b !important;
   --fc-daygrid-event-dot-width: 8px !important;

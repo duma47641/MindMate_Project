@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // 👈 ඔටෝම පේජ් මාරු කරන්න මේක ගත්තා මචං
+import { useNavigate } from 'react-router-dom'; 
 
 const Signup = () => {
-    const navigate = useNavigate(); // 👈 useNavigate එක Initialize කිරීම
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -33,9 +33,8 @@ const Signup = () => {
                 setMessage('Registration successful! Redirecting to login portal...');
                 setFormData({ name: '', email: '', password: '', role: 'Patient' });
 
-                // ⏱️ ⏱️ [AUTO REDIRECT LOGIC] - තත්පර 3කින් ඔටෝම ලොගින් පේජ් එකට හැරවීම:
                 setTimeout(() => {
-                    navigate('/login'); // 👈 ලොගින් පේජ් එකේ පාරට (Route) යැවීම
+                    navigate('/login'); 
                 }, 3000); 
 
             } else {
@@ -101,7 +100,7 @@ const Signup = () => {
             {/* 2. SIGNUP HERO SECTION WITH CLINICAL BACKGROUND & THEMED CARD */}
             <main className="relative bg-[#060d1f] py-16 lg:py-24 overflow-hidden flex-1 flex items-center justify-center">
                 
-                {/* 🏥 Faded Hospital / Clinical Background Image */}
+                {/*  Faded Hospital / Clinical Background Image */}
                 <div 
                     className="absolute inset-y-0 right-0 w-full lg:w-3/5 bg-no-repeat bg-cover bg-center opacity-40 transition-all duration-700 pointer-events-none"
                     style={{ 
@@ -109,7 +108,7 @@ const Signup = () => {
                     }}
                 ></div>
 
-                {/* 🎨 Deep Blue / Teal Gradients */}
+                {/*  Deep Blue / Teal Gradients */}
                 <div className="absolute inset-0 bg-gradient-to-r from-[#060d1f] via-[#060d1f]/95 lg:via-[#060d1f]/80 to-transparent pointer-events-none"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#060d1f] via-transparent to-transparent pointer-events-none"></div>
                 <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>

@@ -13,7 +13,7 @@ const UserSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-// 🔒 Password Hashing Logic
+//  Password Hashing Logic
 UserSchema.pre('save', async function () {
     if (!this.isModified('password')) return;
 

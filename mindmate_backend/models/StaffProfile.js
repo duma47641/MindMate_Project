@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
 const StaffProfileSchema = new mongoose.Schema({
-    // 🔗 ප්‍රධාන User කලෙක්ෂන් එකට ලින්ක් කිරීම
     userId: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User', 

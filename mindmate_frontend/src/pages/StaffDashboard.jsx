@@ -13,7 +13,7 @@ function StaffDashboard() {
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
   const [passLoading, setPassLoading] = useState(false);
 
-  // 📚 Articles Management States (Staff CRUD Engine)
+  //  Articles Management States (Staff CRUD Engine)
   const [articles, setArticles] = useState([]);
   const [articlesLoading, setArticlesLoading] = useState(false);
   const [articleForm, setArticleForm] = useState({
@@ -29,7 +29,7 @@ function StaffDashboard() {
 
   const TOKEN = localStorage.getItem('token');
 
-  // 🔄 1. මුළු සිස්ටම් එකේම තියෙන ඇපොයින්ට්මන්ට්ස් ඔක්කොම සර්වර් එකෙන් ඇදලා ගැනීම (Global Ledger)
+  //  1. Fetching all appointments from the entire system from the server
   const fetchGlobalLedger = async () => {
     if (!TOKEN) return;
     setLoading(true);
@@ -44,7 +44,7 @@ function StaffDashboard() {
     }
   };
 
-  // 🔄 2. සර්වර් එකෙන් ලිපි (Articles) සියල්ල ලබා ගැනීම
+  //  2. Retrieving all articles from the server
   const fetchArticles = async () => {
     setArticlesLoading(true);
     try {
@@ -60,7 +60,6 @@ function StaffDashboard() {
   useEffect(() => {
     if (!TOKEN) { window.location.href = '/login'; return; }
 
-    // 🕵️‍♂️ Token එක ඇතුළෙන් ලොග් වී ඉන්න ස්ටාෆ් මෙම්බර්ගේ නම සහ ඊමේල් එක ඩිකෝඩ් කරලා ගැනීම
     try {
       const base64Url = TOKEN.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -86,7 +85,6 @@ function StaffDashboard() {
     }
   }, [activeMenu]);
 
-  // 👨‍⚕️ Staff එකට ඕන නම් ඇපොයින්ට්මන්ට් එකක් Approve/Cancel කරන්න පුළුවන් ලෝජික් එක
   const handleStatusOverride = async (appId, nextStatus) => {
     if (!window.confirm(`Staff Override: Are you sure you want to ${nextStatus} this appointment?`)) return;
     try {
@@ -99,7 +97,6 @@ function StaffDashboard() {
     }
   };
 
-  // 🔒 ස්ටාෆ්ගේ පාස්වර්ඩ් එක වෙනස් කිරීමේ Submission එක
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     setPassLoading(true);
@@ -115,12 +112,12 @@ function StaffDashboard() {
     }
   };
 
-  // 📚 Article Form Fields Change Handler
+  //  Article Form Fields Change Handler
   const handleArticleChange = (e) => {
     setArticleForm({ ...articleForm, [e.target.name]: e.target.value });
   };
 
-  // 📚 Create හෝ Edit Article Submit Handler
+  //  Create හෝ Edit Article Submit Handler
   const handleArticleSubmit = async (e) => {
     e.preventDefault();
     setArticleSaving(true);
@@ -146,7 +143,7 @@ function StaffDashboard() {
     }
   };
 
-  // 📚 Edit Article Action Trigger
+  //  Edit Article Action Trigger
   const handleArticleEdit = (art) => {
     setEditingArticleId(art._id);
     setArticleForm({
@@ -159,7 +156,7 @@ function StaffDashboard() {
     });
   };
 
-  // 📚 Delete Article Action Trigger
+  //  Delete Article Action Trigger
   const handleArticleDelete = async (id) => {
     if (!window.confirm('Staff Action: Are you sure you want to permanently delete this article?')) return;
     try {
@@ -175,7 +172,7 @@ function StaffDashboard() {
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100 font-sans overflow-hidden">
       
-      {/* 📂 LEFT SIDEBAR */}
+      {/*  LEFT SIDEBAR */}
       <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl h-full flex-shrink-0">
         <div>
           <div className="p-6 border-b border-slate-800 bg-slate-900/50 flex items-center gap-3">
@@ -193,7 +190,7 @@ function StaffDashboard() {
               📋 Overall App Log
             </button>
 
-            {/* 📚 ස්ටාෆ් වෙනුවෙන් අලුතින්ම එක්කළ Articles Management Tab එක */}
+            {/*  Articles Management Tab */}
             <button 
               onClick={() => setActiveMenu('articles')} 
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'articles' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}
@@ -211,7 +208,7 @@ function StaffDashboard() {
           </nav>
         </div>
 
-        {/* 🟢 [Smart Staff Badge] */}
+       
         <div className="p-4 border-t border-slate-800 bg-slate-950/20 space-y-3">
           <div className="flex items-center gap-3 px-2 py-1">
             <div className="w-9 h-9 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-sm font-bold text-teal-400">
@@ -235,19 +232,19 @@ function StaffDashboard() {
       <div className="flex-1 flex flex-col h-full bg-slate-950 min-w-0">
         <header className="flex items-center justify-between px-6 py-4 bg-slate-900/80 border-b border-slate-800 backdrop-blur-md">
           <h1 className="text-lg font-bold tracking-wide text-teal-400">
-            {activeMenu === 'ledger' && 'Global Appointment Ledger'}
+            {activeMenu === 'ledger' && ' Appointment List'}
             {activeMenu === 'articles' && 'Mental Health Articles & Publications'}
             {activeMenu === 'settings' && 'Security Settings'}
           </h1>
         </header>
 
-        {/* 1. 📋 GLOBAL APPOINTMENT LEDGER VIEW */}
+        {/* 1.   APPOINTMENT  VIEW */}
         {activeMenu === 'ledger' && (
           <div className="flex-1 overflow-y-auto p-8">
             <div className="max-w-4xl mx-auto space-y-4">
               <div className="mb-4">
                 <h2 className="text-sm font-bold text-slate-300 font-semibold">Clinic Schedule Overview</h2>
-                <p className="text-[11px] text-slate-500">Monitor, validate, or override active patient sessions across the clinic</p>
+                <p className="text-[11px] text-slate-500"></p>
               </div>
               
               {loading ? (
@@ -299,7 +296,7 @@ function StaffDashboard() {
           </div>
         )}
 
-        {/* 2. 📚 ARTICLES MANAGEMENT TAB (New Staff Capability) */}
+        {/* 2.  ARTICLES MANAGEMENT TAB (New Staff Capability) */}
         {activeMenu === 'articles' && (
           <div className="flex-1 overflow-y-auto p-8">
             <div className="max-w-4xl mx-auto space-y-6">
@@ -458,7 +455,7 @@ function StaffDashboard() {
           </div>
         )}
 
-        {/* 3. ⚙️ STAFF PASSWORD ACCOUNT SETTINGS TAB */}
+        {/* 3.  STAFF PASSWORD ACCOUNT SETTINGS TAB */}
         {activeMenu === 'settings' && (
           <div className="flex-1 overflow-y-auto p-8 flex items-center justify-center">
             <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-6 animate-fadeIn">

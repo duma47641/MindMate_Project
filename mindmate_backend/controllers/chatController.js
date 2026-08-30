@@ -1,25 +1,25 @@
 import Chat from '../models/Chat.js';
 import axios from 'axios';
 
-// @desc    Send a message to AI, analyze sentiment, and save to history
-// @route   POST /api/chat/message
+//  Send a message to AI, analyze sentiment, and save to history
+
 export const sendMessage = async (req, res) => {
     const { message } = req.body;
-    const patientId = req.user.id || req.user._id; // protect middleware එකෙන් ලැබෙන User ID එක
+    const patientId = req.user.id || req.user._id; 
 
     if (!message || !message.trim()) {
         return res.status(400).json({ message: 'Message cannot be empty' });
     }
 
     try {
-        // 1. යූසර්ගේ මැසේජ් එක ඩේටාබේස් එකේ සේව් කිරීම
+    // 1. Saving the user's message to the database
         const userChatLog = await Chat.create({
             patientId,
             message: message.trim(),
             sender: 'User'
         });
 
-        // 2. Python AI Server එකට මැසේජ් එක HTTP Request එකක් හරහා යැවීම
+    // 2. Sending the message to the Python AI server via an HTTP request
         const aiServiceUrl = 'http://127.0.0.1:8000/chat';
         let bot_reply = "I hear you, and I am here to support you.";
         let sentiment = "Normal / Stable";
@@ -39,12 +39,12 @@ export const sendMessage = async (req, res) => {
             });
         }
 
-        // 3. AI එකෙන් ආපු Sentiment එක කලින් සේව් කරපු යූසර්ගේ මැසේජ් එකට අප්ඩේට් කිරීම
+    // 3. Updating the previously saved user message with the sentiment derived from the AI
         userChatLog.sentiment = sentiment;
         userChatLog.confidenceScore = confidence_score;
         await userChatLog.save();
 
-        // 4. AI එක දුන්න පිළිතුර (Bot Reply) අලුත් ඩොකියුමන්ට් එකක් විදිහට ඩේටාබේස් එකේ සේව් කිරීම
+    // 4. Saving the AI's response (Bot Reply) to the database as a new document
         await Chat.create({
             patientId,
             message: bot_reply,
@@ -53,7 +53,7 @@ export const sendMessage = async (req, res) => {
             confidenceScore: confidence_score
         });
 
-        // 5. Frontend එකට පිළිතුර සහ ඇනලිටික්ස් විස්තර යැවීම
+    // 5. Sending the response and analytics details to the frontend
         return res.status(200).json({
             user_message: message,
             bot_reply,
@@ -71,12 +71,12 @@ export const sendMessage = async (req, res) => {
     }
 };
 
-// @desc    Get complete chat history for a specific patient
-// @route   GET /api/chat/history
+//     Get complete chat history for a specific patient
+
 export const getChatHistory = async (req, res) => {
     try {
         const patientId = req.user.id || req.user._id;
-        // ලොග් වෙලා ඉන්න Patient ට අදාළ සියලුම චැට් මැසේජ් පැරණි ඒවයේ සිට අලුත් ඒවට (Ascending) පිළිවෙලට ගැනීම
+    // Retrieving all chat messages related to the logged-in patient in ascending order (from oldest to newest)
         const history = await Chat.find({ patientId }).sort({ createdAt: 1 });
         return res.status(200).json(history);
     } catch (error) {

@@ -3,13 +3,13 @@ import { registerUser, loginUser } from '../controllers/authController.js';
 
 const router = express.Router();
 
-// 👤 සාමාන්‍ය Patient කෙනෙක් Sign Up වෙන පාර
+//  Patient Sign Up
 router.post('/register', registerUser);
 
-// 🩺👑 Admin Dashboard එකෙන් Doctor/Staff Register කරන පාර (Frontend එකෙන් ඉල්ලන එක මචං!)
+//  Admin Dashboard  Doctor/Staff Register 
 router.post('/register-practitioner', registerUser);
 
-// 🔐 හැමෝටම ලොග් වෙන්න තියෙන පොදු පාර
+// Login all
 router.post('/login', loginUser);
 
 export default router;

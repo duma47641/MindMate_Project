@@ -3,20 +3,20 @@ import mongoose from 'mongoose';
 const AppointmentSchema = new mongoose.Schema({
     patientId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // 🔗 ප්‍රධාන Users කලෙක්ෂන් එකේ Patient ව ලින්ක් කළා
+        ref: 'User', 
         required: true
     },
     doctorId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // 🔗 ප්‍රධාන Users කලෙක්ෂන් එකේ Doctor ව ලින්ක් කළා
+        ref: 'User', 
         required: true
     },
     date: {
-        type: String, // 📅 උදා: "2026-06-15"
+        type: String, 
         required: true
     },
     timeSlot: {
-        type: String, // ⏰ උදා: "Mon 4PM"
+        type: String, 
         required: true
     },
     status: {

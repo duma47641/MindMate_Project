@@ -182,7 +182,7 @@ function DoctorDashboard() {
     try {
       const config = { headers: { Authorization: `Bearer ${TOKEN}` } };
       await axios.put('http://localhost:5000/api/users/update-password', passwordForm, config);
-      alert("🔒 Password Updated Successfully!");
+      alert(" Password Updated Successfully!");
       setPasswordForm({ currentPassword: '', newPassword: '' });
     } catch (error) {
       alert(error.response?.data?.message || "Password Update Failed");
@@ -312,9 +312,9 @@ function DoctorDashboard() {
         <header className="flex items-center justify-between px-8 py-4.5 bg-white/80 backdrop-blur-md border-b border-slate-200/80 shadow-xs z-10">
           <div>
             <h1 className="text-base font-extrabold text-slate-800 tracking-tight">
-              {activeMenu === 'dashboard' ? 'Clinical  Schedule' : activeMenu === 'appointments' ? 'Patient Channeling Intake Log List' : activeMenu === 'chat' ? 'Secure Clinical Messaging Desk' : 'Security Settings'}
+              {activeMenu === 'dashboard' ? 'Clinical  Schedule' : activeMenu === 'appointments' ? 'Patient Channeling   List' : activeMenu === 'chat' ? 'Secure Clinical Messaging Desk' : 'Security Settings'}
             </h1>
-            <p className="text-[11px] text-slate-400 font-medium">Doctor Channeling & Consultation Desk</p>
+            <p className="text-[11px] text-slate-400 font-medium"></p>
           </div>
           <div className="flex items-center gap-2">
             <span className="px-3.5 py-1.5 bg-emerald-50/80 border border-emerald-200/70 text-emerald-700 text-xs font-bold rounded-full flex items-center gap-2 shadow-xs">
@@ -326,7 +326,7 @@ function DoctorDashboard() {
 
         {/* ========================================================================= */}
         {/* 1. DEFAULT DASHBOARD VIEW (STATS & CALENDAR) */}
-        {/* ========================================================================= */}
+
         {activeMenu === 'dashboard' && (
           <div className="flex-1 overflow-y-auto p-8 space-y-6">
             <div className="max-w-5xl mx-auto">
@@ -359,8 +359,8 @@ function DoctorDashboard() {
               <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs hover:shadow-md transition-shadow">
                 <div className="flex flex-wrap gap-4 items-center justify-between mb-5 border-b border-slate-100 pb-4">
                   <div>
-                    <h2 className="text-sm font-extrabold text-slate-800 tracking-wide">Interactive Clinical Calendar</h2>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Click any scheduled event block to manage records or view patient mood analytics.</p>
+                    <h2 className="text-sm font-extrabold text-slate-800 tracking-wide">\ Clinical Calendar</h2>
+                    <p className="text-[11px] text-slate-400 mt-0.5"></p>
                   </div>
                   <div className="flex gap-3 text-[10px] bg-slate-50 px-3.5 py-1.5 rounded-xl border border-slate-200/80">
                     <span className="text-amber-600 font-bold">● Pending</span>
@@ -389,13 +389,13 @@ function DoctorDashboard() {
 
         {/* ========================================================================= */}
         {/* 2. PATIENT APPOINTMENTS LIST VIEW */}
-        {/* ========================================================================= */}
+
         {activeMenu === 'appointments' && (
           <div className="flex-1 overflow-y-auto p-8">
             <div className="max-w-4xl mx-auto space-y-4">
               <div className="mb-6">
-                <h2 className="text-lg font-black text-slate-800">Active Consultation Intake Log List</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Approve, decline, and inspect channeled patient appointments.</p>
+                <h2 className="text-lg font-black text-slate-800"></h2>
+                <p className="text-xs text-slate-500 mt-0.5"></p>
               </div>
               
               {loading ? (
@@ -462,18 +462,18 @@ function DoctorDashboard() {
 
         {/* ========================================================================= */}
         {/* 3. DOCTOR LIVE CHAT TAB */}
-        {/* ========================================================================= */}
+
         {activeMenu === 'chat' && <DoctorClinicalChatSection coreAppointments={appointments} docInfo={docInfo} TOKEN={TOKEN} />}
 
         {/* ========================================================================= */}
         {/* 4. SETTINGS TAB */}
-        {/* ========================================================================= */}
+
         {activeMenu === 'settings' && (
           <div className="flex-1 overflow-y-auto p-8 flex items-center justify-center">
             <div className="bg-white border border-slate-200/80 w-full max-w-md rounded-3xl p-8 shadow-sm hover:shadow-md transition-shadow space-y-6">
               <div className="border-b border-slate-100 pb-4">
                 <h2 className="text-base font-extrabold text-slate-800">Update Account Password</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Ensure your medical practitioner account stays protected.</p>
+                <p className="text-xs text-slate-500 mt-0.5"></p>
               </div>
 
               <form onSubmit={handlePasswordUpdate} className="space-y-4">
@@ -561,7 +561,7 @@ function DoctorDashboard() {
 
 // =========================================================================
 //   DOCTOR CLINICAL MESSAGING PORTAL
-// =========================================================================
+
 function DoctorClinicalChatSection({ coreAppointments, docInfo, TOKEN }) {
   const [activeChannel, setActiveChannel] = useState(null);
   const [chatLog, setChatLog] = useState([]);
@@ -681,7 +681,7 @@ function DoctorClinicalChatSection({ coreAppointments, docInfo, TOKEN }) {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
             <div className="text-3xl mb-2">💬</div>
-            <p className="text-xs font-medium">Select an active patient profile from the directory on the left to activate counseling desk.</p>
+            <p className="text-xs font-medium"></p>
           </div>
         )}
       </div>

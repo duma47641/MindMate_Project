@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function AdminDashboard() {
-  const [activeMenu, setActiveMenu] = useState('ledger'); // 'ledger', 'manage_accounts', 'patients_list', 'settings'
+  const [activeMenu, setActiveMenu] = useState('ledger'); 
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // 🚪 Logout Confirmation Modal State
+  // Logout Confirmation Modal State
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   // Admin Identity Info State
@@ -16,12 +16,12 @@ function AdminDashboard() {
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', text: '', newPassword: '' });
   const [passLoading, setPassLoading] = useState(false);
 
-  // 👥 Account Management States
+  //  Account Management States
   const [doctorsList, setDoctorsList] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [accountsLoading, setAccountsLoading] = useState(false);
   
-  // ✏️ Edit Mode States
+  //  Edit Mode States
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
   const [deletedPatientIds, setDeletedPatientIds] = useState(new Set());
@@ -35,7 +35,7 @@ function AdminDashboard() {
 
   const TOKEN = localStorage.getItem('token');
 
-  // 🔄 1. මුළු සිස්ටම් එකේම ඇපොයින්ට්මන්ට්ස් ලොග් එක ගැනීම
+  //  1. Retrieving the appointment log for the entire system
   const fetchGlobalLedger = async () => {
     if (!TOKEN) return;
     try {
@@ -49,7 +49,7 @@ function AdminDashboard() {
     }
   };
 
-  // 🔄 2. දොස්තරලා සහ ස්ටාෆ්ලාගේ ලිස්ට් එක සර්වර් එකෙන් ඇදලා ගැනීම (The Smart Fetcher)
+  //  2. Fetching the list of doctors and staff from the server 
   const fetchAccountsData = async () => {
     if (!TOKEN) return;
     setAccountsLoading(true);
@@ -60,11 +60,10 @@ function AdminDashboard() {
       const resDocs = await axios.get('http://localhost:5000/api/users/doctors', config);
       setDoctorsList(resDocs.data);
       
-      // 💼 Staff Fetching Terminal
+      //  Staff Fetching 
       try {
         const resStaff = await axios.get('http://localhost:5000/api/users/staff', config);
         
-        // බැක්එන්ඩ් එකෙන් කෙලින්ම ස්ටාෆ්ලා විතරක් ආවොත් ඒක දානවා, නැත්නම් මුළු යූසර්ස්ලාම ආවොත් Staff විතරක් filter කරනවා බං
         if (Array.isArray(resStaff.data)) {
           const processedStaff = resStaff.data.map(st => ({
             _id: st._id || st.id,
@@ -78,7 +77,6 @@ function AdminDashboard() {
       } catch (e) { 
         console.log("Staff direct endpoint missing, attempting global scanner fallback...");
         
-        // Fallback Scanner: කෙලින්ම /api/users එකෙන් ඇදලා Staff විතරක් පෙරලා ගන්නවා ක්‍රෑෂ් නොවී!
         try {
           const resAllUsers = await axios.get('http://localhost:5000/api/users', config);
           if (Array.isArray(resAllUsers.data)) {
@@ -132,22 +130,22 @@ function AdminDashboard() {
     if (activeMenu === 'manage_accounts') fetchAccountsData();
   }, [activeMenu]);
 
-  // 👨‍⚕Override Appointment Status
+  // Override Appointment Status
   const handleStatusOverride = async (appId, nextStatus) => {
     if (!window.confirm(`Admin Override: Are you sure you want to ${nextStatus} this appointment?`)) return;
     try {
       const config = { headers: { Authorization: `Bearer ${TOKEN}` } };
       await axios.put(`http://localhost:5000/api/appointments/${appId}/status`, { status: nextStatus }, config);
-      alert(`Appointment status overridden to ${nextStatus}! 🚀`);
+      alert(`Appointment status overridden to ${nextStatus}! `);
       fetchGlobalLedger(); 
     } catch (error) {
       alert("Error: " + (error.response?.data?.message || error.message));
     }
   };
 
-  // 🗑️ Account Delete Logic
+  //  Account Delete Logic
   const handleAccountDelete = async (userId, userRole) => {
-    if (!window.confirm(`🗑️ Are you sure you want to PERMANENTLY DELETE this ${userRole} account?`)) return;
+    if (!window.confirm(`Are you sure you want to PERMANENTLY DELETE this ${userRole} account?`)) return;
     try {
       const config = { headers: { Authorization: `Bearer ${TOKEN}` } };
       await axios.delete(`http://localhost:5000/api/users/${userId}`, config);
@@ -159,9 +157,9 @@ function AdminDashboard() {
     }
   };
 
-  // 🗑️ Patient Delete Logic
+  //  Patient Delete Logic
   const handlePatientDelete = async (patientId, patientName) => {
-    if (!window.confirm(`🗑️ Admin Override: Are you absolutely sure you want to delete patient "${patientName}" permanently?`)) return;
+    if (!window.confirm(` Admin Override:  sure you want to delete patient "${patientName}" permanently?`)) return;
     try {
       const config = { headers: { Authorization: `Bearer ${TOKEN}` } };
       await axios.delete(`http://localhost:5000/api/users/${patientId}`, config);
@@ -169,11 +167,11 @@ function AdminDashboard() {
       fetchGlobalLedger();
     } catch (error) {
       setDeletedPatientIds(prev => { const next = new Set(prev); next.add(patientId); return next; });
-      alert(`🎉 Patient "${patientName}" removed from live terminal log!`);
+      alert(` Patient "${patientName}" removed from live terminal log!`);
     }
   };
 
-  // ✏ Form Pre-filler Scanner
+  //  Form Pre-filler Scanner
   const startEditingMode = (user, role) => {
     setIsEditMode(true);
     setEditingUserId(user._id || user.id);
@@ -191,7 +189,7 @@ function AdminDashboard() {
     });
   };
 
-  // 👥 Create හෝ Update Account Submission
+  // Create or  Update Account Submission
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setCreateLoading(true);
@@ -200,10 +198,10 @@ function AdminDashboard() {
       
       if (isEditMode) {
         await axios.put(`http://localhost:5000/api/users/${editingUserId}`, newUserForm, config);
-        alert(`🎉 ${newUserForm.role} Account Updated Successfully!`);
+        alert(` ${newUserForm.role} Account Updated Successfully!`);
       } else {
         await axios.post('http://localhost:5000/api/users/register', newUserForm, config);
-        alert(`🎉 New ${newUserForm.role} Account Formed Successfully!`);
+        alert(` New ${newUserForm.role} Account Formed Successfully!`);
       }
 
       setIsEditMode(false);
@@ -220,14 +218,14 @@ function AdminDashboard() {
     }
   };
 
-  // 🔒 Admin Password Change
+  //  Admin Password Change
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     setPassLoading(true);
     try {
       const config = { headers: { Authorization: `Bearer ${TOKEN}` } };
       await axios.put('http://localhost:5000/api/users/update-password', passwordForm, config);
-      alert("🔒 Admin Master Account Password Updated Successfully! 🎉");
+      alert(" Admin Master Account Password Updated Successfully! ");
       setPasswordForm({ currentPassword: '', newPassword: '' });
     } catch (error) {
       alert(error.response?.data?.message || "Password Update Failed");
@@ -257,7 +255,7 @@ function AdminDashboard() {
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100 font-sans overflow-hidden">
       
-      {/* 📂 LEFT SIDEBAR */}
+      {/*  LEFT SIDEBAR */}
       <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl h-full flex-shrink-0">
         <div>
           <div className="p-6 border-b border-slate-800 bg-slate-900/50 flex items-center gap-3">
@@ -270,7 +268,7 @@ function AdminDashboard() {
           <nav className="p-4 space-y-2">
             <button onClick={() => setActiveMenu('ledger')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'ledger' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}>📋 Master App Log</button>
             <button onClick={() => setActiveMenu('manage_accounts')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'manage_accounts' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}>👥 Account Management</button>
-            <button onClick={() => setActiveMenu('patients_list')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'patients_list' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}>👥 Patient Directory</button>
+            <button onClick={() => setActiveMenu('patients_list')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'patients_list' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}>👥 Patient List</button>
             <button onClick={() => setActiveMenu('settings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-xs transition-all ${activeMenu === 'settings' ? 'bg-teal-600 text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800/50'}`}>⚙️ Account Settings</button>
           </nav>
         </div>
@@ -293,11 +291,11 @@ function AdminDashboard() {
       <div className="flex-1 flex flex-col h-full bg-slate-950 min-w-0">
         <header className="flex items-center justify-between px-6 py-4 bg-slate-900/80 border-b border-slate-800 backdrop-blur-md">
           <h1 className="text-lg font-bold tracking-wide text-teal-400">
-            {activeMenu === 'ledger' ? 'Global Appointment Ledger (Master View)' : activeMenu === 'manage_accounts' ? 'Clinical Staff & Practitioner Registry' : activeMenu === 'patients_list' ? 'Registered Patient Repository' : 'Security Settings'}
+            {activeMenu === 'ledger' ? 'Admin Dashboard' : activeMenu === 'manage_accounts' ? 'Clinical Staff & Practitioner Registry' : activeMenu === 'patients_list' ? 'Registered Patient Repository' : 'Security Settings'}
           </h1>
         </header>
 
-        {/* 1. 📋 GLOBAL APPOINTMENT LEDGER VIEW */}
+        {/* 1.  GLOBAL APPOINTMENT LEDGER VIEW */}
         {activeMenu === 'ledger' && (
           <div className="flex-1 overflow-y-auto p-8 space-y-6">
             <div className="max-w-4xl mx-auto">
@@ -338,7 +336,7 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* 2. 👥 ACCOUNT MANAGEMENT */}
+        {/* 2.  ACCOUNT MANAGEMENT */}
         {activeMenu === 'manage_accounts' && (
           <div className="flex-1 overflow-y-auto p-8 space-y-8">
             <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -346,7 +344,7 @@ function AdminDashboard() {
               <div className="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 h-fit">
                 <div>
                   <h3 className="text-sm font-bold text-teal-400">{isEditMode ? '⚙️ Update Clinical Profile' : 'Create Clinical Account'}</h3>
-                  <p className="text-[11px] text-slate-500">{isEditMode ? 'Modify current credentials inside system live files.' : 'Deploy a new Doctor or Staff authorization file.'}</p>
+                  <p className="text-[11px] text-slate-500">{isEditMode ? 'Modify current credentials inside system live files.' : ''}</p>
                 </div>
                 <form onSubmit={handleFormSubmit} className="space-y-3 text-xs">
                   <div>
@@ -468,14 +466,14 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* 3. 👥 REGISTERED PATIENTS REPOSITORY */}
+        {/* 3.  REGISTERED PATIENTS REPOSITORY */}
         {activeMenu === 'patients_list' && (
           <div className="flex-1 overflow-y-auto p-8 animate-fadeIn">
             <div className="max-w-3xl mx-auto space-y-4">
               <div className="mb-4 flex justify-between items-center">
                 <div>
-                  <h2 className="text-sm font-bold text-slate-300 font-semibold uppercase tracking-wider">System Patient Directory</h2>
-                  <p className="text-[11px] text-slate-500">Centralized registry profiles logged inside the clinical network.</p>
+                  <h2 className="text-sm font-bold text-slate-300 font-semibold uppercase tracking-wider">System Patient List</h2>
+                  <p className="text-[11px] text-slate-500"></p>
                 </div>
                 <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-xl">● Total Logged: {extractedPatients.length}</span>
               </div>
@@ -511,11 +509,11 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* 4. ⚙️ ADMIN PASSWORD ACCOUNT SETTINGS TAB */}
+        {/* 4.  ADMIN PASSWORD ACCOUNT SETTINGS TAB */}
         {activeMenu === 'settings' && (
           <div className="flex-1 overflow-y-auto p-8 flex items-center justify-center">
             <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-6">
-              <div><h2 className="text-md font-bold text-slate-200">Update Account Security</h2><p className="text-xs text-slate-500 mt-1">Keep your clinic management terminal fully safe and authorized.</p></div>
+              <div><h2 className="text-md font-bold text-slate-200">Update Account Security</h2><p className="text-xs text-slate-500 mt-1"></p></div>
               <form onSubmit={handlePasswordUpdate} className="space-y-4">
                 <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Current Password</label><input type="password" required placeholder="••••••••" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-teal-500 text-slate-200 transition-colors" /></div>
                 <div><label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">New Password</label><input type="password" required placeholder="Minimum 6 characters" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-teal-500 text-slate-200 transition-colors" /></div>
@@ -526,7 +524,7 @@ function AdminDashboard() {
         )}
       </div>
 
-      {/* ==================== 📊 PREMIUM LOGOUT CONFIRMATION POPUP ==================== */}
+      {/* ====================   LOGOUT CONFIRMATION POPUP ==================== */}
       {showLogoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md transition-all">
           <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl p-6 space-y-6">

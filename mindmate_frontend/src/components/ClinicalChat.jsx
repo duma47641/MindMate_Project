@@ -15,7 +15,7 @@ function ClinicalChat() {
   const messagesEndRef = useRef(null);
   const TOKEN = localStorage.getItem('token');
 
-  // 🔐 Token එකෙන් මගේ විස්තර (ID සහ Role) එක ඇදලා ගන්නවා මචං
+  //  Extracting details (ID and Role) from the token
   useEffect(() => {
     if (!TOKEN) return;
     try {
@@ -32,18 +32,16 @@ function ClinicalChat() {
     }
   }, [TOKEN]);
 
-  // 👥 චැට් කරපු/කරන්න පුළුවන් හැමෝගෙම Active Contacts ලිස්ට් එක ඇදීම
+  // Fetching the list of active contacts for everyone you have chatted with or can chat with
   const fetchContacts = async () => {
     if (!TOKEN) return;
     try {
       const config = { headers: { Authorization: `Bearer ${TOKEN}` } };
       
-      // 1. දැනට මැසේජ් කරපු අය ඇදලා ගන්නවා
+  // 1. Retrieve the people who have already sent messages.
       const resActive = await axios.get('http://localhost:5000/api/messages/contacts', config);
       let list = Array.isArray(resActive.data) ? resActive.data : [];
 
-      // 💡 [Smart Helper Logic]: පේෂන්ට් කෙනෙක්ට දැනට චැට් ලිස්ට් එකක් නැත්නම්, 
-      // ඌට චැට් එකක් පටන් ගන්න ලේසි වෙන්න ඇප් එකේ ඉන්න හැම දොස්තරවම මේ ලිස්ට් එකට දානවා මචං
       if (myInfo.role === 'Patient' && list.length === 0) {
         try {
           const resDocs = await axios.get('http://localhost:5000/api/users/doctors', config);
@@ -69,7 +67,6 @@ function ClinicalChat() {
     }
   };
 
-  // 📜 තෝරාගත් පුද්ගලයා සහ මා අතර මුළු චැට් හිස්ට්‍රි එකම ඇදලා ගැනීම
   const fetchChatHistory = async (otherUserId) => {
     if (!TOKEN || !otherUserId) return;
     try {
@@ -81,13 +78,13 @@ function ClinicalChat() {
     }
   };
 
-  // 🔄 REAL-TIME AUTO POLLING: තත්පර 3න් 3ට චැට් එක පසුබිමෙන් අප්ඩේට් වෙනවා මචං!
+  // REAL-TIME AUTO POLLING: The chat updates in the background every 3 seconds, mate!
   useEffect(() => {
     fetchContacts();
     
     const contactsInterval = setInterval(() => {
       fetchContacts();
-    }, 10000); // Contacts ලිස්ට් එක තත්පර 10ට සැරයක් අප්ඩේට් වෙයි
+    }, 10000); 
 
     return () => clearInterval(contactsInterval);
   }, [myInfo.role]);
@@ -99,17 +96,15 @@ function ClinicalChat() {
 
     const chatInterval = setInterval(() => {
       fetchChatHistory(selectedContact._id);
-    }, 3000); // චැට් හිස්ට්‍රි එක තත්පර 3න් 3ට සජීවීව රීෆ්‍රෙෂ් වෙයි
+    }, 3000); 
 
     return () => clearInterval(chatInterval);
   }, [selectedContact]);
 
-  // අලුත් මැසේජ් ආවම ස්ක්‍රෝල් බාර් එක ඔටෝම පහළට තල්ලු කරනවා බං
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // සර්ච් බාර් එකෙන් කන්ටැක්ට්ස් නමින් සර්ච් කිරීමේ ලෝජික් එක
   useEffect(() => {
     const results = contacts.filter(c => 
       c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -118,7 +113,7 @@ function ClinicalChat() {
     setFilteredContacts(results);
   }, [searchTerm, contacts]);
 
-  // ✉️ අලුතින් මැසේජ් එකක් සෙන්ඩ් කිරීම (Send Message Function)
+  // Sending a new message (Send Message Function)
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessageText.trim() || !selectedContact) return;
@@ -132,7 +127,6 @@ function ClinicalChat() {
       const config = { headers: { Authorization: `Bearer ${TOKEN}` } };
       const { data } = await axios.post('http://localhost:5000/api/messages/send', msgBody, config);
       
-      // ලෝකල් ස්ටේට් එකට සැනින් දාලා UI එක ක්ෂණිකව අප්ඩේට් කරනවා මචං
       setMessages(prev => [...prev, data]);
       setNewMessageText('');
     } catch (error) {
@@ -143,7 +137,7 @@ function ClinicalChat() {
   return (
     <div className="flex h-[calc(100vh-80px)] bg-slate-950 text-slate-100 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
       
-      {/* 👥 1. LEFT SIDE PANEL - CONTACTS LIST */}
+      {/*  1. LEFT SIDE PANEL - CONTACTS LIST */}
       <div className="w-80 bg-slate-900/60 border-r border-slate-800/80 flex flex-col h-full">
         {/* Search header */}
         <div className="p-4 border-b border-slate-800/60 bg-slate-900/40 space-y-3">
@@ -191,7 +185,7 @@ function ClinicalChat() {
         </div>
       </div>
 
-      {/* 💬 2. RIGHT PANEL - CONVERSATION PORTAL */}
+      {/*  2. RIGHT PANEL - CONVERSATION PORTAL */}
       <div className="flex-1 bg-slate-950 flex flex-col h-full">
         {selectedContact ? (
           <>
@@ -267,7 +261,7 @@ function ClinicalChat() {
             <div className="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-2xl shadow-xl"></div>
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest">Medical Communication Desk</h3>
-              <p className="text-[11px] text-slate-500 max-w-xs leading-relaxed">Select an active Doctor or Patient profile from the directory on the left to activate secure counseling log.</p>
+              <p className="text-[11px] text-slate-500 max-w-xs leading-relaxed"></p>
             </div>
           </div>
         )}

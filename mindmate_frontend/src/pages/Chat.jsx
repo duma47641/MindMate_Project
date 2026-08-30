@@ -4,7 +4,7 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
 function Chat() {
-  const [activeMenu, setActiveMenu] = useState('chat'); // 'chat', 'doctor_chat', 'booking', 'my_appointments', 'settings'
+  const [activeMenu, setActiveMenu] = useState('chat'); 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -54,7 +54,7 @@ function Chat() {
     finally { setAppointmentsLoading(false); }
   };
 
-  // 🔔 Global Background Listener for Doctor Messages
+  //  Background Listener for Doctor Messages
   useEffect(() => {
     if (!TOKEN) return;
 
@@ -208,7 +208,7 @@ function Chat() {
   return (
     <div className="flex h-screen bg-[#F8FAFC] text-slate-800 font-sans overflow-hidden relative">
       
-      {/* 🔔 LIVE NOTIFICATION POPUP */}
+      {/*  LIVE NOTIFICATION POPUP */}
       {activeNotification && (
         <div className="fixed top-5 right-5 z-50 bg-white/95 border border-blue-200 backdrop-blur-md text-slate-800 px-5 py-4 rounded-2xl shadow-xl flex items-start gap-4 max-w-sm animate-slideIn">
           <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 font-black text-sm flex items-center justify-center shadow-xs">💬</div>
@@ -224,7 +224,7 @@ function Chat() {
         </div>
       )}
 
-      {/* 📂 LEFT SIDEBAR (PRESERVED STRUCTURE WITH ELEVATED HOVER STATES) */}
+      {/*  LEFT SIDEBAR (PRESERVED STRUCTURE WITH ELEVATED HOVER STATES) */}
       <aside className="w-64 bg-white border-r border-slate-200/80 flex flex-col justify-between shadow-[2px_0_12px_rgba(0,0,0,0.02)] h-full flex-shrink-0">
         <div>
           <div className="p-6 border-b border-slate-100 flex items-center gap-3">
@@ -276,14 +276,14 @@ function Chat() {
         </div>
       </aside>
 
-      {/* 💻 MAIN VIEW CONTENT CONTAINER */}
+      {/*  MAIN VIEW CONTENT CONTAINER */}
       <div className="flex-1 flex flex-col h-full bg-[#F8FAFC] min-w-0">
         
         {/* Top Header */}
         <header className="flex items-center justify-between px-8 py-4.5 bg-white/80 backdrop-blur-md border-b border-slate-200/80 shadow-xs z-10">
           <div>
             <h1 className="text-base font-extrabold text-slate-800 tracking-tight">
-              {activeMenu === 'chat' ? 'MindMate AI Clinical Assistant' : activeMenu === 'doctor_chat' ? 'Medical Officer Messaging Desk' : activeMenu === 'booking' ? 'Booking Counsaltants' : activeMenu === 'my_appointments' ? 'My Scheduled Consultations' : 'Security Settings'}
+              {activeMenu === 'chat' ? 'MindMate AI Clinical Assistant' : activeMenu === 'doctor_chat' ? 'Doctor Messaging Desk' : activeMenu === 'booking' ? 'Booking Counsaltants' : activeMenu === 'my_appointments' ? 'My Appointments' : 'Security Settings'}
             </h1>
             <p className="text-[11px] text-slate-400 font-medium">Privacy-First & Encrypted Mental Health Portal</p>
           </div>
@@ -296,8 +296,7 @@ function Chat() {
         </header>
 
         {/* ========================================================================= */}
-        {/* 1. AI CHAT TAB (MODERNIZED BUBBLES & INPUT GLOW) */}
-        {/* ========================================================================= */}
+        {/* 1. AI CHAT TAB  */}
         {activeMenu === 'chat' && (
           <div className="flex-1 flex flex-col min-h-0 bg-gradient-to-b from-slate-50/50 to-white">
             <div className="flex-1 overflow-y-auto px-4 py-8 md:px-16 lg:px-28 space-y-6">
@@ -369,7 +368,6 @@ function Chat() {
 
         {/* ========================================================================= */}
         {/* 2. DOCTOR LIVE CHAT TAB */}
-        {/* ========================================================================= */}
         {activeMenu === 'doctor_chat' && (
           (() => {
             const myBookedDoctors = myAppointments
@@ -396,14 +394,14 @@ function Chat() {
         )}
 
         {/* ========================================================================= */}
-        {/* 3. BOOKING TAB (MODERNIZED DOCTOR CARDS) */}
-        {/* ========================================================================= */}
+        {/* 3. BOOKING TAB  */}
+
         {activeMenu === 'booking' && (
           <div className="flex-1 overflow-y-auto p-8">
             <div className="max-w-6xl mx-auto">
               <div className="mb-8">
                 <h2 className="text-lg font-black text-slate-800">Verified Clinical Practitioners</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Select a specialist and book a confidential counseling slot.</p>
+                <p className="text-xs text-slate-500 mt-0.5"></p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -448,14 +446,14 @@ function Chat() {
         )}
 
         {/* ========================================================================= */}
-        {/* 4. MY APPOINTMENTS TAB (ELEVATED STATUS BADGES) */}
-        {/* ========================================================================= */}
+        {/* 4. MY APPOINTMENTS TAB */}
+
         {activeMenu === 'my_appointments' && (
           <div className="flex-1 overflow-y-auto p-8">
             <div className="max-w-4xl mx-auto space-y-4">
               <div className="mb-6">
                 <h2 className="text-lg font-black text-slate-800">Consultation List</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Manage your appointment requests, payment statuses, and schedule details.</p>
+                <p className="text-xs text-slate-500 mt-0.5"></p>
               </div>
 
               {appointmentsLoading ? (
@@ -509,13 +507,13 @@ function Chat() {
 
         {/* ========================================================================= */}
         {/* 5. SETTINGS TAB */}
-        {/* ========================================================================= */}
+
         {activeMenu === 'settings' && (
           <div className="flex-1 overflow-y-auto p-8 flex items-center justify-center">
             <div className="bg-white border border-slate-200/80 w-full max-w-md rounded-3xl p-8 shadow-sm hover:shadow-md transition-shadow space-y-6">
               <div className="border-b border-slate-100 pb-4">
                 <h2 className="text-base font-extrabold text-slate-800">Security Credentials</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Keep your account and private counseling history protected.</p>
+                <p className="text-xs text-slate-500 mt-0.5"></p>
               </div>
 
               <form onSubmit={handlePasswordUpdate} className="space-y-4">
@@ -619,7 +617,6 @@ function Chat() {
 
 // =========================================================================
 // CLINICAL MESSAGING PORTAL 
-// =========================================================================
 function ClinicalChatSection({ coreDoctors, patientInfo, TOKEN }) {
   const [activeChannel, setActiveChannel] = useState(null);
   const [chatLog, setChatLog] = useState([]);

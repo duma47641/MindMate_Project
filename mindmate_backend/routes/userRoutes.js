@@ -4,21 +4,21 @@ import { protect } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 router.get('/', getAllPractitioners);
-router.get('/doctors', getAvailableDoctors); // 👈 🟢 PATIENT API: GET /api/users/doctors
+router.get('/doctors', getAvailableDoctors);
 router.delete('/:id', deleteUser);
 router.put('/:id', updateUser);
 router.put('/update-password', protect, updateDoctorPassword);
 
 
-// 🟢 Register Endpoint (Admin Creation)
+//  Register Endpoint (Admin Creation)
 router.post('/register', protect, registerUser);
 
 // 🩺 Doctors & Staff Fetching
 router.get('/doctors', getAvailableDoctors);
-router.get('/staff', protect, getAllPractitioners); // Staff endpoint fallback
+router.get('/staff', protect, getAllPractitioners); 
 router.get('/', protect, getAllPractitioners);
 
-// ✏️ Update & Delete
+// Update & Delete
 router.put('/update-password', protect, updateDoctorPassword);
 router.put('/:id', protect, updateUser);
 router.delete('/:id', protect, deleteUser);
